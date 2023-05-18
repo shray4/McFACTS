@@ -1,6 +1,7 @@
 def ReadInputs():
-    """This function reads your input choices from a file named model_choice.txt,
-    and returns the chosen variables for manipulation by main.    
+    """This function reads your input choices from a file named
+    model_choice.txt, and returns the chosen variables for manipulation
+    by main.    
 
     Required input formats and units are given in the model_choice.txt file.
 
@@ -45,8 +46,8 @@ def ReadInputs():
         Initial spin distribution for stellar bh is assumed to be Gaussian
         --standard deviation of spin dist
     spin_torque_condition : float
-        fraction of initial mass required to be accreted before BH spin is torqued 
-        fully into alignment with the AGN disk. We don't know for sure but 
+        fraction of initial mass required to be accreted before BH spin is 
+        torqued fully into alignment with the AGN disk. We don't know for sure but 
         Bogdanovic et al. says between 0.01=1% and 0.1=10% is what is required.
     frac_Eddington_ratio : float
         assumed accretion rate onto stellar bh from disk gas, in units of Eddington
