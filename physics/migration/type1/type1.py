@@ -1,8 +1,9 @@
 import numpy as np
 import scipy
 
-def type1_migration(mass_smbh, prograde_bh_locations, prograde_bh_masses, disk_surf_model, disk_aspect_ratio_model, timestep):
-    """This function calculates how far a single object migrates in an AGN gas disk in a time
+
+def type1_migration(mass_smbh, prograde_bh_locations, prograde_bh_masses, disk_surf_model, disk_aspect_ratio_model, timestep, feedback_ratio, trap_radius):
+    """This function calculates how far an object migrates in an AGN gas disk in a time
     of length timestep, assuming a gas disk surface density and aspect ratio profile, for
     objects of specified masses and starting locations, and returns their new locations
     after migration over one timestep.
@@ -25,7 +26,11 @@ def type1_migration(mass_smbh, prograde_bh_locations, prograde_bh_masses, disk_s
         can accept a simple float (constant), but this is deprecated
     timestep : float
         size of timestep in years
-
+    feedback_ratio : function
+        ratio of heating/migration torque. If ratio <1, migration inwards, but slows by factor tau_mig/(1-R)
+        if ratio >1, migration outwards on timescale tau_mig/(R-1)
+    trap_radius : float
+        radius of disk migration trap in units of gravitational radii (r_g=GM_smbh/c^2)    
     Returns
     -------
     bh_new_locations : float array
@@ -54,7 +59,73 @@ def type1_migration(mass_smbh, prograde_bh_locations, prograde_bh_masses, disk_s
     dt = timestep * scipy.constants.year / tau_mig
     # migration distance is original locations times fraction of tau_mig elapsed
     migration_distance = prograde_bh_locations * dt
-    # new locations are original ones - distance traveled
-    bh_new_locations = prograde_bh_locations - migration_distance
 
+
+    # Feedback provides a universal modification of migration distance
+    # If feedback off, then feedback_ratio= ones and migration is unchanged
+    # Construct empty array same size as prograde_bh_locations 
+
+    bh_new_locations = np.empty_like(prograde_bh_locations)
+
+    # Find indices of objects where feedback ratio <1; these still migrate inwards, but more slowly
+    # feedback ratio is a tuple, so need [0] part not [1] part (ie indices not details of array)
+    index_inwards_modified = np.where(feedback_ratio < 1)[0]
+    index_inwards_size = index_inwards_modified.size
+    all_inwards_migrators = prograde_bh_locations[index_inwards_modified]
+    #print("all inwards migrators",all_inwards_migrators)
+
+    #Given a population migrating inwards
+    if index_inwards_size > 0: 
+        for i in range(0,index_inwards_size):
+                # Among all inwards migrators, find location in disk & compare to trap radius
+                critical_distance = all_inwards_migrators[i]
+                actual_index = index_inwards_modified[i]
+                #If outside trap, migrates inwards
+                if critical_distance > trap_radius:
+                    bh_new_locations[actual_index] = prograde_bh_locations[actual_index] - (migration_distance[actual_index]*(1-feedback_ratio[actual_index]))
+                    #If inward migration takes object inside trap, fix at trap.
+                    if bh_new_locations[actual_index] <= trap_radius:
+                        bh_new_locations[actual_index] = trap_radius
+                #If inside trap, migrates out
+                if critical_distance < trap_radius:
+                    #print("inside trap radius!")
+                    bh_new_locations[actual_index] = prograde_bh_locations[actual_index] + (migration_distance[actual_index]*(1-feedback_ratio[actual_index]))
+                    #print("bh_inside_trap", bh_new_locations[actual_index])
+                    #If outward migration takes object outside trap, fix at trap.
+                    if bh_new_locations[actual_index] >= trap_radius:
+                        bh_new_locations[actual_index] = trap_radius
+                #If at trap, stays there
+                if critical_distance == trap_radius:
+                    #print("BH AT TRAP!")
+                    #print(bh_new_locations[actual_index])
+                    bh_new_locations[actual_index] = prograde_bh_locations[actual_index]
+
+    # Find indices of objects where feedback ratio >1; these migrate outwards. 
+    # In Sirko & Goodman (2003) disk model this is well outside migration trap region.
+    index_outwards_modified = np.where(feedback_ratio >1)[0]
+
+    if index_outwards_modified.size > 0:
+        bh_new_locations[index_outwards_modified] = prograde_bh_locations[index_outwards_modified] +(migration_distance[index_outwards_modified]*(feedback_ratio[index_outwards_modified]-1))
+    
+    #Find indices where feedback ratio is identically 1; shouldn't happen (edge case) if feedback on, but == 1 if feedback off.
+    index_unchanged = np.where(feedback_ratio == 1)[0]
+    if index_unchanged.size > 0:
+    # If BH location > trap radius, migrate inwards
+        if prograde_bh_locations[index_unchanged] > trap_radius:    
+            bh_new_locations[index_unchanged] = prograde_bh_locations[index_unchanged] - migration_distance[index_unchanged]
+            # if new location is <= trap radius, set location to trap radius
+            if bh_new_locations[index_unchanged] <= trap_radius:
+                bh_new_locations[index_unchanged] = trap_radius
+
+    # If BH location < trap radius, migrate outwards
+        if prograde_bh_locations[index_unchanged] < trap_radius:
+            bh_new_locations[index_unchanged] = prograde_bh_locations[index_unchanged] + migration_distance[index_unchanged]
+            #if new location is >= trap radius, set location to trap radius
+            if bh_new_locations[index_unchanged] >= trap_radius:
+                bh_new_locations[index_unchanged] = trap_radius
+    #print("bh new locations",np.sort(bh_new_locations))
+
+    # new locations are original ones - distance traveled
+    #bh_new_locations = prograde_bh_locations - migration_distance
+    
     return bh_new_locations

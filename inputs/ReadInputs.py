@@ -77,7 +77,9 @@ def ReadInputs_ini(fname='inputs/model_choice.txt'):
         Aspect ratio corresponding to radii in disk_model_radius_array
         drawn from modelname_aspect_ratio.txt
     retro : int
-        Switch (0) turns retrograde BBH into prograde BBH at formation to test (q,X_eff) relation   
+        Switch (0) turns retrograde BBH into prograde BBH at formation to test (q,X_eff) relation 
+    feedback : int
+        Switch (0) turns feedback from embedded BH on.
 
     """
 
@@ -103,8 +105,11 @@ def ReadInputs_ini(fname='inputs/model_choice.txt'):
     print(input_variables)
 
     disk_model_name = input_variables['disk_model_name']
+
     mass_smbh = float(input_variables['mass_smbh'])
     trap_radius = float(input_variables['trap_radius'])
+    disk_outer_radius = float(input_variables['disk_outer_radius'])
+    alpha = float(input_variables['alpha'])
     n_bh = int(input_variables['n_bh'])
     mode_mbh_init = float(input_variables['mode_mbh_init'])
     max_initial_bh_mass = float(input_variables['max_initial_bh_mass'])
@@ -117,6 +122,11 @@ def ReadInputs_ini(fname='inputs/model_choice.txt'):
     timestep = float(input_variables['timestep'])
     number_of_timesteps = int(input_variables['number_of_timesteps'])
     retro = int(input_variables['retro'])
+    feedback = int(input_variables['feedback'])
+    capture_time = float(input_variables['capture_time'])
+    outer_capture_radius = float(input_variables['outer_capture_radius'])
+    crit_ecc = float(input_variables['crit_ecc'])
+    
     print("I put your variables where they belong")
 
     # open the disk model surface density file and read it in
@@ -135,6 +145,8 @@ def ReadInputs_ini(fname='inputs/model_choice.txt'):
         # If it is NOT a comment line
         if (line.startswith('#') == 0):
             columns = line.split()
+            #If radius is less than disk outer radius
+            #if columns[1] < disk_outer_radius:
             density_list.append(float(columns[0]))
             radius_list.append(float(columns[1]))
     # close file
@@ -143,6 +155,12 @@ def ReadInputs_ini(fname='inputs/model_choice.txt'):
     # re-cast from lists to arrays
     surface_density_array = np.array(density_list)
     disk_model_radius_array = np.array(radius_list)
+
+    #truncate disk at outer radius
+    truncated_disk = np.extract(np.where(disk_model_radius_array < disk_outer_radius),disk_model_radius_array)
+    #print('truncated disk', truncated_disk)
+    truncated_surface_density_array = surface_density_array[0:len(truncated_disk)]
+    #print('truncated surface density', truncated_surface_density_array)
 
     # open the disk model aspect ratio file and read it in
     # Note format is assumed to be comments with #
@@ -159,26 +177,37 @@ def ReadInputs_ini(fname='inputs/model_choice.txt'):
         # If it is NOT a comment line
         if (line.startswith('#') == 0):
             columns = line.split()
+            #If radius is less than disk outer radius
+            #if columns[1] < disk_outer_radius:
             aspect_ratio_list.append(float(columns[0]))
     # close file
     aspect_ratio_file.close()
 
     # re-cast from lists to arrays
     aspect_ratio_array = np.array(aspect_ratio_list)
+    truncated_aspect_ratio_array=aspect_ratio_array[0:len(truncated_disk)]
+    #print("truncated aspect ratio array", truncated_aspect_ratio_array)
+
+    # Now redefine arrays read in by main() in terms of truncated arrays
+    disk_model_radius_array = truncated_disk
+    surface_density_array = truncated_surface_density_array
+    aspect_ratio_array = truncated_aspect_ratio_array
 
     # Housekeeping from input variables
     disk_outer_radius = disk_model_radius_array[-1]
     disk_inner_radius = disk_model_radius_array[0]
 
+    #Truncate disk models at outer disk radius
+
     print("I read and digested your disk model")
 
     print("Sending variables back")
 
-    return mass_smbh, trap_radius, n_bh, mode_mbh_init, max_initial_bh_mass, \
+    return mass_smbh, trap_radius, disk_outer_radius, alpha, n_bh, mode_mbh_init, max_initial_bh_mass, \
         mbh_powerlaw_index, mu_spin_distribution, sigma_spin_distribution, \
             spin_torque_condition, frac_Eddington_ratio, max_initial_eccentricity, \
                 timestep, number_of_timesteps, disk_model_radius_array, disk_inner_radius,\
-                    disk_outer_radius, surface_density_array, aspect_ratio_array, retro \
+                    disk_outer_radius, surface_density_array, aspect_ratio_array, retro, feedback, capture_time, outer_capture_radius, crit_ecc \
 
 
 
