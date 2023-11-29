@@ -292,7 +292,7 @@ def com_migration(bin_array, disk_surf_model, disk_aspect_ratio_model, timestep,
 
     return bin_array
 
-def bin_migration(mass_smbh, bin_array, disk_surf_model, disk_aspect_ratio_model, timestep):
+def bin_migration(mass_smbh, bin_array, disk_surf_model, disk_aspect_ratio_model, timestep, feedback_ratio, trap_radius):
     """This function calculates how far the center of mass of a binary migrates in an AGN gas disk in a time
     of length timestep, assuming a gas disk surface density and aspect ratio profile, for
     objects of specified masses and starting locations, and returns their new locations
@@ -349,8 +349,77 @@ def bin_migration(mass_smbh, bin_array, disk_surf_model, disk_aspect_ratio_model
     dt = timestep * scipy.constants.year / tau_mig
     # migration distance is original locations times fraction of tau_mig elapsed
     migration_distance = bin_com * dt
+    
+    # Feedback provides a universal modification of migration distance
+    # If feedback off, then feedback_ratio= ones and migration is unchanged
+    # Construct empty array same size as prograde_bh_locations 
+
+    bh_new_locations = np.empty_like(bin_com)
+
+    # Find indices of objects where feedback ratio <1; these still migrate inwards, but more slowly
+    # feedback ratio is a tuple, so need [0] part not [1] part (ie indices not details of array)
+    index_inwards_modified = np.where(feedback_ratio < 1)[0]
+    index_inwards_size = index_inwards_modified.size
+    all_inwards_migrators = bin_com[index_inwards_modified]
+    #print("all inwards migrators",all_inwards_migrators)
+
+    #Given a population migrating inwards
+    if index_inwards_size > 0: 
+        for i in range(0,index_inwards_size):
+                # Among all inwards migrators, find location in disk & compare to trap radius
+                critical_distance = all_inwards_migrators[i]
+                actual_index = index_inwards_modified[i]
+                #If outside trap, migrates inwards
+                if critical_distance > trap_radius:
+                    bh_new_locations[actual_index] = bin_com[actual_index] - (migration_distance[actual_index]*(1-feedback_ratio[actual_index]))
+                    #If inward migration takes object inside trap, fix at trap.
+                    if bh_new_locations[actual_index] <= trap_radius:
+                        bh_new_locations[actual_index] = trap_radius
+                #If inside trap, migrates out
+                if critical_distance < trap_radius:
+                    #print("inside trap radius!")
+                    bh_new_locations[actual_index] = bin_com[actual_index] + (migration_distance[actual_index]*(1-feedback_ratio[actual_index]))
+                    #print("bh_inside_trap", bh_new_locations[actual_index])
+                    #If outward migration takes object outside trap, fix at trap.
+                    if bh_new_locations[actual_index] >= trap_radius:
+                        bh_new_locations[actual_index] = trap_radius
+                #If at trap, stays there
+                if critical_distance == trap_radius:
+                    #print("BH AT TRAP!")
+                    #print(bh_new_locations[actual_index])
+                    bh_new_locations[actual_index] = bin_com[actual_index]
+
+    # Find indices of objects where feedback ratio >1; these migrate outwards. 
+    # In Sirko & Goodman (2003) disk model this is well outside migration trap region.
+    index_outwards_modified = np.where(feedback_ratio >1)[0]
+
+    if index_outwards_modified.size > 0:
+        bh_new_locations[index_outwards_modified] = bin_com[index_outwards_modified] +(migration_distance[index_outwards_modified]*(feedback_ratio[index_outwards_modified]-1))
+    
+    #Find indices where feedback ratio is identically 1; shouldn't happen (edge case) if feedback on, but == 1 if feedback off.
+    index_unchanged = np.where(feedback_ratio == 1)[0]
+    if index_unchanged.size > 0:
+    # If BH location > trap radius, migrate inwards
+        if bin_com[index_unchanged] > trap_radius:    
+            bh_new_locations[index_unchanged] = bin_com[index_unchanged] - migration_distance[index_unchanged]
+            # if new location is <= trap radius, set location to trap radius
+            if bh_new_locations[index_unchanged] <= trap_radius:
+                bh_new_locations[index_unchanged] = trap_radius
+
+    # If BH location < trap radius, migrate outwards
+        if bin_com[index_unchanged] < trap_radius:
+            bh_new_locations[index_unchanged] = bin_com[index_unchanged] + migration_distance[index_unchanged]
+            #if new location is >= trap radius, set location to trap radius
+            if bh_new_locations[index_unchanged] >= trap_radius:
+                bh_new_locations[index_unchanged] = trap_radius
+    #print("bh new locations",np.sort(bh_new_locations))
+
     # new locations are original ones - distance traveled
-    bh_new_locations = bin_com - migration_distance
+    #bh_new_locations = prograde_bh_locations - migration_distance
+    
+    
+    # new locations are original ones - distance traveled
+    #bh_new_locations = bin_com - migration_distance
     # send locations back to bin_array and DONE!
     bin_array[9,:] = bh_new_locations
 

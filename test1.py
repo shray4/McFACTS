@@ -206,7 +206,7 @@ def main():
                 ratio_heat_mig_torques_bin_com = np.ones(len(binary_bh_array[9,:]))   
 
             # Migrate binaries center of mass
-            binary_bh_array = evolve.bin_migration(mass_smbh, binary_bh_array, disk_surface_density, disk_aspect_ratio, timestep)
+            binary_bh_array = evolve.bin_migration(mass_smbh, binary_bh_array, disk_surface_density, disk_aspect_ratio, timestep,ratio_heat_mig_torques_bin_com,trap_radius)
             
             #Check and see if merger flagged during hardening (row 11, if negative)
             merger_flags = binary_bh_array[11,:]
