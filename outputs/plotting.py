@@ -7,7 +7,7 @@ import matplotlib.colors as colors
 from mpl_toolkits.axes_grid1 import AxesGrid
 
 def get_data(path, filename):
-    # read in the data and dump to arrays
+    # read in the data from output files and return
     
     # open the file for reading
     file1 = open(path+filename, 'r')
@@ -68,11 +68,52 @@ def get_data(path, filename):
 
     return center_of_mass, total_mass, chi_eff, a_tot, spin_angle, m1, m2, a1, a2, theta1, theta2, gen1, gen2, t_merge
 
-def make_q_chi_eff():
+def make_q_chi_eff(m1, m2, chi_eff):
     # make q-chi_eff plot from all mergers
-    # read in masses, chi_eff from output_mergers.dat
-    # compute q (is m1 always > m2 by definition or is it random?)
+    # take the masses and chi_eff from main
+    # compute q (note m1 NOT always > m2 by definition)
 
+    plot_done = False
+    print("Plot done? ",plot_done)
+
+    # BEGIN DISPLAY INPUTS:
+    # format=left, bottom, width, height
+    rect1=0.12,0.12,0.85,0.85
+        
+    # make figure
+    fig1=plt.figure(1)
+    # add axes
+    ax1=fig1.add_axes(rect1)
+    # label them
+    # ax1.yaxis.set_label_coords(1.0, 0.05)
+    ax1.set_ylabel(r"$q$", fontsize=18)
+    # ax1.xaxis.set_label_coords(-1.0, 1.0)
+    ax1.set_xlabel(r"$\chi_{eff}$", fontsize=18)
+
+    # set up range for x-axis
+    plt.xlim(-1.0, 1.0)
+    # range for y-axis
+    plt.ylim(0.05, 1.0)
+    #END DISPLAY INPUTS
+
+    # set up y-axis variables
+    primary = np.maximum(m1, m2)
+    secondary = np.minimum(m1, m2)
+
+    # make mass ratio
+    mass_ratio = secondary/primary
+
+    # make the plot
+    ax1.scatter(chi_eff, mass_ratio, color='black')
+    # save plot to file
+    savefig('q_chi_eff.png')
+    if (1==1):
+        plot_done = True
+
+    return plot_done
+
+if __name__ == "__main__":
+    # get the data and put it in arrays
     path = ''
     inputfiles = ['output_mergers.dat']
     center_of_mass=[]
@@ -107,44 +148,7 @@ def make_q_chi_eff():
         gen2.append(gen_2)
         t_merge.append(tmrg)
 
-    plot_done = False
-    print(plot_done)
+    # make a q-chi_eff plot 
+    chi_eff_ran = make_q_chi_eff(m1, m2, chi_eff)
 
-    # BEGIN DISPLAY INPUTS:
-    # format=left, bottom, width, height
-    rect1=0.12,0.12,0.85,0.85
-        
-    # make figure
-    fig1=plt.figure(1)
-    # add axes
-    ax1=fig1.add_axes(rect1)
-    # label them
-    # ax1.yaxis.set_label_coords(1.0, 0.05)
-    ax1.set_ylabel(r"$q$", fontsize=18)
-    # ax1.xaxis.set_label_coords(-1.0, 1.0)
-    ax1.set_xlabel(r"$\chi_{eff}$", fontsize=18)
-
-    # set up range for x-axis
-    plt.xlim(-1.0, 1.0)
-    # range for y-axis
-    plt.ylim(0.05, 1.0)
-    #END DISPLAY INPUTS
-
-    # set up y-axis variables
-    primary = np.maximum(m1, m2)
-    secondary = np.minimum(m1, m2)
-
-    mass_ratio = secondary/primary
-
-    ax1.scatter(chi_eff, mass_ratio, color='black')
-
-    savefig('q_chi_eff.png')
-    if (1==1):
-        plot_done = True
-
-    return plot_done
-
-if __name__ == "__main__":
-    print("In main")
-    ran = make_q_chi_eff()
-    print(ran)
+    print("chi_eff ran = ", chi_eff_ran)
