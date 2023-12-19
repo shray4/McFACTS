@@ -1,9 +1,6 @@
 import numpy as np
-from numpy.random import default_rng
 
-rng=default_rng(1234)
-
-def add_to_binary_array2(bin_array, bh_locations, bh_masses, bh_spins, bh_spin_angles, bh_gens, close_encounters, bindex, retro, verbose=False):
+def add_to_binary_array2(rng, bin_array, bh_locations, bh_masses, bh_spins, bh_spin_angles, bh_gens, close_encounters, bindex, retro, verbose=False,):
     """This is where we add new binaries. We take the locations, masses, spins, spin angles and generations
     from the relevant singletons, found in hillsphere.binary_check, and sort those parameters into bin_array. 
     We then ADD additional parameters relevant only for binaries, including semi-major axis of the binary,

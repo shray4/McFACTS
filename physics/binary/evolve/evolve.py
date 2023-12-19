@@ -164,7 +164,7 @@ def com_feedback_hankla(bin_array, disk_surf_model, frac_Eddington_ratio, alpha)
 
     temp_bin_com_locations = bin_array[9,:]
     
-    print("Bin com locations",temp_bin_com_locations)
+    #print("Bin com locations",temp_bin_com_locations)
 
     # get surface density function, or deal with it if only a float
     if isinstance(disk_surf_model, float):
@@ -182,7 +182,7 @@ def com_feedback_hankla(bin_array, disk_surf_model, frac_Eddington_ratio, alpha)
 
     Ratio_feedback_migration_torque_bin_com = 0.07 *(1/kappa)* ((alpha)**(-1.5))*frac_Eddington_ratio*np.sqrt(temp_bin_com_locations)/disk_surface_density
 
-    print("ratio", Ratio_feedback_migration_torque_bin_com)
+    #print("ratio", Ratio_feedback_migration_torque_bin_com)
     #print((1/kappa),((alpha)**(-1.5)),frac_Eddington_ratio)
     #print("Ratio", Ratio_feedback_migration_torque) 
     #print("BH locations", prograde_bh_locations) 

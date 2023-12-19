@@ -2,7 +2,7 @@ import numpy as np
 import scipy
 
 
-def type1_migration(mass_smbh, prograde_bh_locations, prograde_bh_masses, disk_surf_model, disk_aspect_ratio_model, timestep, feedback_ratio, trap_radius):
+def type1_migration(mass_smbh, prograde_bh_locations, prograde_bh_masses, disk_surf_model, disk_aspect_ratio_model, timestep, feedback_ratio, trap_radius, prograde_bh_orb_ecc, e_crit):
     """This function calculates how far an object migrates in an AGN gas disk in a time
     of length timestep, assuming a gas disk surface density and aspect ratio profile, for
     objects of specified masses and starting locations, and returns their new locations
@@ -30,7 +30,11 @@ def type1_migration(mass_smbh, prograde_bh_locations, prograde_bh_masses, disk_s
         ratio of heating/migration torque. If ratio <1, migration inwards, but slows by factor tau_mig/(1-R)
         if ratio >1, migration outwards on timescale tau_mig/(R-1)
     trap_radius : float
-        radius of disk migration trap in units of gravitational radii (r_g=GM_smbh/c^2)    
+        radius of disk migration trap in units of gravitational radii (r_g=GM_smbh/c^2) 
+    prograde_bh_orb_ecc : float array
+        orbital ecc of prograde singleton BH at start of timestep. Floor in orbital ecc given by e_crit
+    e_crit : float
+        Critical value of orbital eccentricity below which we assume Type 1 migration must occur. Do not damp orb ecc below this (e_crit=0.01 is default)           
     Returns
     -------
     bh_new_locations : float array
@@ -47,6 +51,22 @@ def type1_migration(mass_smbh, prograde_bh_locations, prograde_bh_masses, disk_s
     else:
         disk_aspect_ratio = disk_aspect_ratio_model(prograde_bh_locations)
 
+    # Migration can only occur for sufficiently damped orbital ecc. If orb ecc <= e_crit, then migration. 
+    # Otherwise, no change in semi-major axis. Wait till orb ecc damped to <=e_crit.
+    #Only show BH with orb ecc <=e_crit
+    prograde_bh_crit_ecc = np.ma.masked_where(prograde_bh_orb_ecc > e_crit, prograde_bh_orb_ecc)
+    #Those BH with orb ecc > e_crit
+    prograde_bh_not_mig = np.ma.masked_where(prograde_bh_orb_ecc <= e_crit, prograde_bh_orb_ecc)
+    #Indices of BH with <=critical ecc
+    crit_ecc_prograde_indices = np.ma.nonzero(prograde_bh_crit_ecc)
+    #print('crit ecc indices',crit_ecc_prograde_indices)
+    #print('Ecc_yes',prograde_bh_orb_ecc[crit_ecc_prograde_indices])
+    #Indicies of BH with > critical ecc
+    indices_not_mig_BH = np.ma.nonzero(prograde_bh_not_mig)    
+    #print('Non migr indices',indices_not_mig_BH)
+    #print('Ecc no',prograde_bh_orb_ecc[indices_not_mig_BH])
+    #Migration only if there are BH with e<=e_crit
+    #if np.size(crit_ecc_prograde_indices) > 0:
     # compute migration timescale for each orbiter in seconds
     # eqn from Paardekooper 2014, rewritten for R in terms of r_g of SMBH = GM_SMBH/c^2
     # tau = (pi/2) h^2/(q_d*q) * (1/Omega)
@@ -59,7 +79,15 @@ def type1_migration(mass_smbh, prograde_bh_locations, prograde_bh_masses, disk_s
     dt = timestep * scipy.constants.year / tau_mig
     # migration distance is original locations times fraction of tau_mig elapsed
     migration_distance = prograde_bh_locations * dt
-
+    #print('migration distance',migration_distance)
+    #Mask migration distance with zeros if orb ecc >= e_crit.
+    migration_distance[indices_not_mig_BH] = 0.
+    #print('migration distance2',migration_distance)
+    #    print('Tests',prograde_bh_locations[crit_ecc_prograde_indices],prograde_bh_orb_ecc[crit_ecc_prograde_indices])
+    #    print('migration distance', migration_distance)
+    #    print(migration_distance[crit_ecc_prograde_indices])
+    #    migration_distance[crit_ecc_prograde_indices] = prograde_bh_locations[crit_ecc_prograde_indices] * dt
+    
 
     # Feedback provides a universal modification of migration distance
     # If feedback off, then feedback_ratio= ones and migration is unchanged

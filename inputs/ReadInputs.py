@@ -80,7 +80,22 @@ def ReadInputs_ini(fname='inputs/model_choice.txt'):
         Switch (0) turns retrograde BBH into prograde BBH at formation to test (q,X_eff) relation 
     feedback : int
         Switch (0) turns feedback from embedded BH on.
-
+    r_nsc_out : float
+        Radius of NSC (units of pc)
+    M_nsc : float
+        Mass of NSC (units of M_sun)
+    r_nsc_crit : float
+        Radius where NSC density profile flattens (transition to Bahcall-Wolf) (units of pc)
+    nbh_nstar_ratio : float
+        Ratio of number of BH to stars in NSC (typically spans 3x10^-4 to 10^-2 in Generozov+18)
+    mbh_mstar_ratio : float
+        Ratio of mass of typical BH to typical star in NSC (typically 10:1 in Generozov+18)
+    nsc_index_inner : float
+        Index of radial density profile of NSC inside r_nsc_crit (usually Bahcall-Wolf, 1.75)
+    nsc_index_outer : float
+        Index of radial density profile of NSC outside r_nsc_crit (e.g. 2.5 in Generozov+18 or 2.25 if Peebles)
+    h_disk_average : float
+        Average disk scale height (e.g. about 3% in Sirko & Goodman 2003 out to ~0.3pc)        
     """
 
     config = ConfigParser.ConfigParser()
@@ -126,7 +141,15 @@ def ReadInputs_ini(fname='inputs/model_choice.txt'):
     capture_time = float(input_variables['capture_time'])
     outer_capture_radius = float(input_variables['outer_capture_radius'])
     crit_ecc = float(input_variables['crit_ecc'])
-    
+    r_nsc_out = float(input_variables['r_nsc_out'])
+    M_nsc = float(input_variables['M_nsc'])
+    r_nsc_crit = float(input_variables['r_nsc_crit'])
+    nbh_nstar_ratio = float(input_variables['nbh_nstar_ratio'])
+    mbh_mstar_ratio = float(input_variables['mbh_mstar_ratio'])
+    nsc_index_inner = float(input_variables['nsc_index_inner'])
+    nsc_index_outer = float(input_variables['nsc_index_outer'])
+    h_disk_average = float(input_variables['h_disk_average'])
+
     print("I put your variables where they belong")
 
     # open the disk model surface density file and read it in
@@ -207,7 +230,8 @@ def ReadInputs_ini(fname='inputs/model_choice.txt'):
         mbh_powerlaw_index, mu_spin_distribution, sigma_spin_distribution, \
             spin_torque_condition, frac_Eddington_ratio, max_initial_eccentricity, \
                 timestep, number_of_timesteps, disk_model_radius_array, disk_inner_radius,\
-                    disk_outer_radius, surface_density_array, aspect_ratio_array, retro, feedback, capture_time, outer_capture_radius, crit_ecc \
+                    disk_outer_radius, surface_density_array, aspect_ratio_array, retro, feedback, capture_time, outer_capture_radius, crit_ecc, \
+                        r_nsc_out, M_nsc, r_nsc_crit, nbh_nstar_ratio, mbh_mstar_ratio, nsc_index_inner, nsc_index_outer, h_disk_average\
 
 
 

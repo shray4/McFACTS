@@ -19,6 +19,23 @@ alpha = 0.01
 #
 # Nuclear Star Cluster Population:
 #
+#Outer radius of NSC (1-10pc) in units of pc
+r_nsc_out = 5.0
+#Mass of NSC in M_sun. Milky Way NSC is 3x10^7Msun. Typically 10^6-7Msun from obs.
+M_nsc = 3.e7
+#Inner critial NSC radius (where radial number density changes) in units of pc. 0.25pc for SgrA* (Generozov+18).
+r_nsc_crit = 0.25
+#Ratio of number of BH to number of Stars (spans 3x10^-4 to 10^-2 in Generozov+18)
+nbh_nstar_ratio = 1.e-3
+#Typical ratio of mass of BH to mass of star (10Msun:1Msun in Generozov+18)
+mbh_mstar_ratio = 10.0
+#Radial density index for inner NSC, for r<r_nsc_crit. n propto r^-7/4 for Bahcall-Wolf (& Generozov+18)
+nsc_index_inner = 1.75
+#Radial density index for outer NSC, for r>r_nsc_crit. n propto r^-2.5 for Generozov+18, r^-2.25 Peebles)
+nsc_index_outer = 2.5
+#Average aspect ratio of disk (calculate this based on r_disk_outer?). Roughly 3% or so for Sirko&Goodman03.
+h_disk_average = 0.03
+#
 # number of BH in disk to start
 n_bh = 200
 # Mode of initial BH mass distribution in M_sun (peak of Pareto fn)
@@ -45,6 +62,9 @@ max_initial_eccentricity = 0.3
 timestep = 1.e4
 # For timestep=1.e4, number_of_timesteps=100 gives us 1Myr disk lifetime
 number_of_timesteps = 100
+
+# Set the number of iterations to run multiple populations
+number_of_iterations = 5
 #
 # Other physics choices: 
 #

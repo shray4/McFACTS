@@ -219,7 +219,7 @@ def encounter_test(prograde_bh_locations, bh_hill_sphere):
 
     return sorted_final_1d_indx_array
 
-def binary_check(prograde_bh_locations, prograde_bh_masses, mass_smbh):
+def binary_check(prograde_bh_locations, prograde_bh_masses, mass_smbh, prograde_bh_orb_ecc, e_crit):
     """Determines which prograde BH will form binaries in this timestep. Takes as inputs
     the singleton BH locations & masses, and checks if their separations are less than
     the mutual Hill sphere of any 2 adjacent BH. If this is the case, determine the
@@ -239,7 +239,10 @@ def binary_check(prograde_bh_locations, prograde_bh_masses, mass_smbh):
         initial masses of bh in prograde orbits around SMBH in units of solar masses
     mass_smbh : float
         mass of supermassive black hole in units of solar masses
-
+    prograde_bh_orb_ecc : float array
+        Orbital ecc of singleton BH after damping during timestep
+    e_crit : float
+        Critical eccentricity allowing bin formation and migration    
     Returns
     -------
     all_binary_indices : [2,N] int array
@@ -249,10 +252,18 @@ def binary_check(prograde_bh_locations, prograde_bh_masses, mass_smbh):
         and a width of 2.
     """
 
+    #print('bh locations',prograde_bh_locations)
     # First sort the prograde bh locations in order from inner disk to outer disk
     sorted_bh_locations = np.sort(prograde_bh_locations)
+    #print('sorted bh locations',sorted_bh_locations)
     # Returns the indices of the original array in order, to get the sorted array
     sorted_bh_location_indices = np.argsort(prograde_bh_locations)
+    # Returns the indices of the orb ecc array, to get sorted array of orb ecc
+    #print('sorted bh location indices',sorted_bh_location_indices)
+    #print('bh orb ecc',prograde_bh_orb_ecc)
+    sorted_bh_ecc_array = np.empty_like(prograde_bh_orb_ecc)
+    sorted_bh_ecc_array = prograde_bh_orb_ecc[np.argsort(prograde_bh_locations)]
+    #print('orb ecc of sorted bh', sorted_bh_ecc_array)
     # Find the distances between [r1,r2,r3,r4,..] as [r2-r1,r3-r2,r4-r3,..]=[delta1,delta2,delta3..]
     # Note length of separations is 1 less than prograde_bh_locations
     separations = np.diff(sorted_bh_locations)
@@ -266,19 +277,18 @@ def binary_check(prograde_bh_locations, prograde_bh_masses, mass_smbh):
     minimum_formation_criteria = separations - R_Hill_possible_binaries
     # collect indices of possible real binaries (where separation is less than mutual Hill sphere)
     index_formation_criteria = np.where(minimum_formation_criteria < 0)
-
     # Now deal with sequences: compute separation/R_Hill for all
     sequences_to_test = (separations[index_formation_criteria])/(R_Hill_possible_binaries[index_formation_criteria])
-    print(sequences_to_test)
+    #print(sequences_to_test)
     # sort sep/R_Hill for all 'binaries' that need checking & store indices
     sorted_sequences = np.sort(sequences_to_test)
-    print(sorted_sequences)
+    #print(sorted_sequences)
     sorted_sequences_indices = np.argsort(sequences_to_test)
-    print(sorted_sequences_indices)
+    #print(sorted_sequences_indices)
     # the smallest sep/R_Hill should always form a binary, so
     checked_binary_index = np.array([sorted_sequences_indices[0]])
-    print(checked_binary_index)
-    for i in range(len(sorted_sequences)):
+    #print(checked_binary_index)
+    for i in range(len(sorted_sequences)): 
         # if we haven't already counted it
         if (sorted_sequences_indices[i] not in checked_binary_index):
             # and it isn't the implicit partner of something we've already counted
@@ -290,14 +300,128 @@ def binary_check(prograde_bh_locations, prograde_bh_masses, mass_smbh):
                         # then you can count it as a real binary
                         checked_binary_index = np.append(checked_binary_index, sorted_sequences_indices[i])
 
-    print("THIS IS SAAVIK'S OUTPUT!!")
+    #print("THIS IS SAAVIK'S OUTPUT!!")
     # create array of all real binaries
     # BUT what are we returning? need indices of original arrays
     # that go to singleton vs binary assignments--actual binary formation *should* happen elsewhere!
     # I have the indices of the sorted_bh_locations array that correspond to actual binaries
     # these are checked_binary_index, checked_binary_index+1
     all_binary_indices = np.array([sorted_bh_location_indices[checked_binary_index], sorted_bh_location_indices[checked_binary_index+1]])
-    print(np.shape(all_binary_indices))
-    print(np.shape(all_binary_indices)[1])
+    #print(np.shape(all_binary_indices))
+    #print(np.shape(all_binary_indices)[1])
+    
+    #HERE is where we check that both BH have damped orbital eccentricity (e<=0.01). Otherwise do not form binary
+    # TO DO: Make new bin formation condition at modest ecc & encounters. 
+    # E.g. Remember in a timestep of 10^4yrs, there are 10^4 orbits at R=10^3r_g
+    #Singleton BH with orb ecc > e_crit
+    prograde_bh_not_form_bins = np.ma.masked_where(prograde_bh_orb_ecc <= e_crit, prograde_bh_orb_ecc)
+    #Singleton BH with orb ecc < e_crit
+    prograde_bh_can_form_bins = np.ma.masked_where(prograde_bh_orb_ecc >e_crit, prograde_bh_orb_ecc)
+    #Indices of singleton BH with orb ecc > e_crit
+    indices_bh_not_form_bins = np.ma.nonzero(prograde_bh_not_form_bins) 
+    #Indices of singleton BH with orb ecc < e_crit
+    indices_bh_can_form_bins = np.ma.nonzero(prograde_bh_can_form_bins)
+    
 
-    return all_binary_indices
+    #print('ORIGINAL INDICES BH ALLOWED FORM BINS',np.array(indices_bh_can_form_bins[0]))
+    allowed_to_form_bins = np.array(indices_bh_can_form_bins[0])
+    #print('allowed bh locs',prograde_bh_locations[allowed_to_form_bins])
+    sorted_allowed_bh_loc = np.sort(prograde_bh_locations[allowed_to_form_bins])
+    #print('sorted allowed bh locs',sorted_allowed_bh_loc)
+    #print('allowed bh eccs',prograde_bh_orb_ecc[allowed_to_form_bins])
+    #print('allowed bh masses',prograde_bh_masses[allowed_to_form_bins])
+    allowed_separations = np.diff(sorted_allowed_bh_loc)
+    # Now compute mutual hill spheres of all possible binaries
+    # same length as separations
+    R_Hill_allowed_bin_test = (sorted_allowed_bh_loc[:-1] + allowed_separations/2.0) * \
+        pow(((prograde_bh_masses[allowed_to_form_bins[:-1]] + \
+              prograde_bh_masses[allowed_to_form_bins[1:]]) / \
+                (mass_smbh * 3.0)), (1.0/3.0))
+    # compare separations to mutual Hill spheres - negative values mean possible binary formation
+    allowed_min_form_criteria = allowed_separations - R_Hill_allowed_bin_test
+    print('criteria',allowed_min_form_criteria)
+    # collect indices of possible real binaries (where separation is less than mutual Hill sphere)
+    allowed_indx_form_criteria = np.where(allowed_min_form_criteria < 0)
+    print(allowed_indx_form_criteria)
+    allowed_idx_crit = allowed_indx_form_criteria[0]
+    print(allowed_idx_crit)
+
+    if np.size(allowed_indx_form_criteria) >0: 
+        #If multiple negative results in criteria
+        item1 = np.empty(len(allowed_idx_crit))
+        item2 = np.empty(len(allowed_idx_crit))
+        item1_idx = np.empty(len(allowed_idx_crit))
+        item2_idx = np.empty(len(allowed_idx_crit))
+        idx1 = np.empty(len(allowed_idx_crit))
+        idx2 = np.empty(len(allowed_idx_crit))
+        for i in range(len(allowed_idx_crit)):
+            item1[i] = sorted_allowed_bh_loc[allowed_idx_crit[i]]
+            item2[i] = sorted_allowed_bh_loc[allowed_idx_crit[i]+1]         
+            print(item1[0],item2[0])
+            item1_idx = np.where(prograde_bh_locations == item1[i])
+            item2_idx = np.where(prograde_bh_locations == item2[i])
+            print(item1_idx[0],item2_idx[0])
+            idx1 = item1_idx[0] 
+            idx2 = item2_idx[0]
+            print(idx1,idx2)
+
+        #for j in range(len(idx1)):
+            #print(idx1[j],idx2[j]) 
+            #print(prograde_bh_locations[idx1[j]],prograde_bh_locations[idx2[j]],prograde_bh_orb_ecc[idx1[j]],prograde_bh_orb_ecc[idx2[j]])
+    
+    # Now deal with sequences: compute separation/R_Hill for all
+    allowed_sequences_to_test = (allowed_separations[allowed_indx_form_criteria])/(R_Hill_allowed_bin_test[allowed_indx_form_criteria])
+    #print('allowed seqs to test', allowed_sequences_to_test)
+    # sort sep/R_Hill for all 'binaries' that need checking & store indices
+    sorted_allowed_sequences = np.sort(allowed_sequences_to_test)
+    #print(sorted_allowed_sequences)
+    sorted_allowed_sequences_indices = np.argsort(allowed_sequences_to_test)
+    #print(sorted_allowed_sequences_indices)
+    # the smallest sep/R_Hill should always form a binary, so
+    if np.count_nonzero(sorted_allowed_sequences_indices) > 0:
+        allowed_checked_binary_index = np.array([sorted_allowed_sequences_indices[0]],dtype = int)
+        #print(allowed_checked_binary_index)
+    
+    for i in range(len(sorted_allowed_sequences)): 
+        allowed_checked_binary_index = np.array([sorted_allowed_sequences_indices[0]],dtype = int)
+        # if we haven't already counted it
+        if (sorted_allowed_sequences_indices[i] not in allowed_checked_binary_index):
+            # and it isn't the implicit partner of something we've already counted
+            if (sorted_allowed_sequences_indices[i] not in allowed_checked_binary_index+1):
+                # and the implicit partner of this thing isn't already counted
+                if (sorted_allowed_sequences_indices[i]+1 not in allowed_checked_binary_index):
+                    # and the implicit partner of this thing isn't already an implicit partner we've counted
+                    if (sorted_allowed_sequences_indices[i]+1 not in allowed_checked_binary_index+1):
+                        # then you can count it as a real binary
+                        allowed_checked_binary_index = np.append(allowed_checked_binary_index, sorted_allowed_sequences_indices[i])
+
+    
+    #Check if any of the checked binary index array are in the array of indices that can form bins
+    #check_overlap = np.isin(checked_binary_index,allowed_to_form_bins)
+    #final_overlap = np.array(check_overlap.nonzero()[0])
+    #print('final overlap',final_overlap)
+    #print('sorted bh locs',sorted_bh_locations[final_overlap])
+    #print('orb eccs',sorted_bh_ecc_array[final_overlap])
+    #Check for adjacent integers in final overlap
+    #Take the difference of integers in final overlap
+    #diffs_final_overlap = np.diff(final_overlap)
+    #print(diffs_final_overlap)
+    #possible_bins = np.where(diffs_final_overlap == 1)
+    #print(possible_bins)
+    #print('final checked binary index ',checked_binary_index)
+    
+    # create array of all real binaries
+    # BUT what are we returning? need indices of original arrays
+    # that go to singleton vs binary assignments--actual binary formation *should* happen elsewhere!
+    # I have the indices of the sorted_bh_locations array that correspond to actual binaries
+    # these are checked_binary_index, checked_binary_index+1
+    if np.count_nonzero(sorted_allowed_sequences) > 0:
+        final_binary_indices = np.array([idx1,idx2])
+#        final_binary_indices = np.array([sorted_bh_location_indices[allowed_checked_binary_index], sorted_bh_location_indices[allowed_checked_binary_index+1]])
+        print(np.shape(final_binary_indices))
+        print(np.shape(final_binary_indices)[1])
+        #print(prograde_bh_locations[allowed_checked_binary_index],prograde_bh_locations[allowed_checked_binary_index+1])
+    else: 
+        final_binary_indices=np.empty_like(allowed_sequences_to_test)
+    #return all_binary_indices
+    return final_binary_indices
