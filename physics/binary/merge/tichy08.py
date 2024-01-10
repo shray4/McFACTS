@@ -30,7 +30,7 @@ def merged_mass(mass_1,mass_2,spin_1,spin_2):
     nu_factor = (1.0+mass_ratio)**2.0
     nu = mass_ratio/nu_factor
     nusq = nu*nu
-    print(" Mass array ",total_mass)
+    #print(" Mass array ",total_mass)
     nu =  (primary* secondary)/ (total_mass)**2 # mass_ratio/nu_factor
     nusq = nu*nu
 

@@ -48,14 +48,14 @@ def merged_bh(merged_array,bin_array, merger_indices_here,chi_here,mass_here,spi
     #Return an array with properties of merger
     #Center of mass, M_total, Chi_eff, a_tot, spin_angle, m1,m2,a1,a2,theta1,theta2,gen1,gen2,time of merger
     merger_indices = np.array(merger_indices_here)
-    print(merger_indices)
-    print("length merger indices",len(merger_indices))
+    #print(merger_indices)
+    #print("length merger indices",len(merger_indices))
     n_mergers_so_far=int(num_mergers)
     n_mergers_this_timestep = len(merger_indices)
 
     if len(merger_indices)>1:   # deal with the fact that we have multiple mergers
-        print(" Multiple mergers - we are about to lose events ")
-        print(mass_here, chi_here, spin_here)
+        #print(" Multiple mergers - we are about to lose events ")
+        #print(mass_here, chi_here, spin_here)
         merger_indices = merger_indices[0]
         if isinstance(mass_here, np.ndarray):
             mass =  mass_here[0]
@@ -74,8 +74,8 @@ def merged_bh(merged_array,bin_array, merger_indices_here,chi_here,mass_here,spi
     
     #num_mergers_this_timestep = len(merger_indices)
                 
-    print("num mergers this timestep",n_mergers_this_timestep)
-    print("n_mergers_so_far",n_mergers_so_far)    
+    #print("num mergers this timestep",n_mergers_this_timestep)
+    #print("n_mergers_so_far",n_mergers_so_far)    
     for i in range (0,n_mergers_this_timestep):
         #            merged_bh_com = merged_bh_array[0,n_mergers_so_far + i]
         merged_array[0,n_mergers_so_far + i] = bin_array[9,merger_indices]

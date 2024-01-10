@@ -1,6 +1,6 @@
 import numpy as np
 
-def add_to_binary_array2(rng, bin_array, bh_locations, bh_masses, bh_spins, bh_spin_angles, bh_gens, close_encounters, bindex, retro, verbose=False,):
+def add_to_binary_array2(rng, bin_array, bh_locations, bh_masses, bh_spins, bh_spin_angles, bh_gens, close_encounters, bindex, retro, verbose=True,):
     """This is where we add new binaries. We take the locations, masses, spins, spin angles and generations
     from the relevant singletons, found in hillsphere.binary_check, and sort those parameters into bin_array. 
     We then ADD additional parameters relevant only for binaries, including semi-major axis of the binary,
@@ -87,7 +87,7 @@ def add_to_binary_array2(rng, bin_array, bh_locations, bh_masses, bh_spins, bh_s
         print("Close encounters ", np.shape(close_encounters)[1], array_of_indices)
         bincount = 0
         # for all the new binaries that need to be created
-        for j in range(bindex, bindex + num_new_bins):
+        for j in range(bindex, (bindex + num_new_bins)):
             # for each member of the binary
             for i in range(0,2):
                 # pick the [0,N] or [1,N] index for member 1 and member 2 of binary
@@ -116,9 +116,10 @@ def add_to_binary_array2(rng, bin_array, bh_locations, bh_masses, bh_spins, bh_s
                 if retro == 0:
                     bh_initial_orb_ang_mom = np.fabs(bh_initial_orb_ang_mom)
                 bin_array[16,j] = bh_initial_orb_ang_mom
-                print("Random uniform number =", random_uniform_number )
-                print("New orb ang mom =", bh_initial_orb_ang_mom)
+                #print("Random uniform number =", random_uniform_number )
+                #print("New orb ang mom =", bh_initial_orb_ang_mom)
             bincount = bincount + 1
+            print("bincount=", bincount)
         if verbose:
             print("New Binary")
             print(bin_array)

@@ -1,4 +1,5 @@
 import numpy as np
+import scipy
 
 def orbital_ecc_damping(mass_smbh, prograde_bh_locations, prograde_bh_masses, disk_surf_model, disk_aspect_ratio_model, bh_orb_ecc, timestep, crit_ecc):
     """"Return array of BH orbital eccentricities damped according to a prescription
@@ -101,3 +102,150 @@ def orbital_ecc_damping(mass_smbh, prograde_bh_locations, prograde_bh_masses, di
     new_bh_orb_ecc = np.where(new_bh_orb_ecc<crit_ecc, crit_ecc,new_bh_orb_ecc)
     #print("Old ecc, New ecc",bh_orb_ecc,new_bh_orb_ecc)
     return new_bh_orb_ecc
+
+
+def dimnless_energy_integral(gamma, ecc):
+    """Numerically computes the dimensionless energy integral required for eccentricity pumping
+    for retrograde orbiters. Uses simple trapezoid rule. Eqn 19 from Secunda et al. 2021
+    (2021ApJ...908L..27S). Derivation assumes AGN disk midplane density is powerlaw in radius
+    (see below definition of gamma). This is close enough to true for SG and TQM, and should
+    be true in general... but maybe you have a really strange disk model, so, be aware.
+
+    Parameters
+    ----------
+    gamma : float
+        power-law index for radial distribution of AGN disk midplane density (ie rho(r) \propto r^gamma)
+    ecc : float
+        current eccentricity of orbiter
+
+    Returns
+    -------
+    dless_energy_integral : float
+        value of the dimensionless energy integral (Eqn 19) from Secunda et al. 2021
+    """
+    # compute value of prefix to integral
+    integral_prefix = 1.0/(2.0*np.pi*np.sqrt(1.0-ecc**2))
+    # set resolution and range of integration, which goes from 0-2pi around the orbit
+    d_phi = 0.01
+    phi = np.arange(0.0, 2.0*np.pi, d_phi)
+    # set u substitution variable, per Eqn 19
+    u_sub_var = (1.0 + ecc*np.cos(phi))/(1.0 - ecc**2)
+    # compute denominator of the integrand (note same as for ang mom integral, eqn 20)
+    integrand_denom = pow((-1.0 + 3.0*u_sub_var + 2.0*np.sqrt(1.0-ecc**2)*pow(u_sub_var, 1.5)), 1.5)
+    # compute numerator of the integrand
+    integrand_numerator = (-1.0 + 3.0*u_sub_var + 2.0*np.sqrt(1.0-ecc**2)*pow(u_sub_var, 1.5))*pow(u_sub_var,(-gamma-2.0))
+    
+    #trapezoid rule integration
+    dless_energy_integral = 0.0
+    for i in range(len(phi)-1):
+        trapezoid = integral_prefix*0.5*((integrand_numerator[i]/integrand_denom[i]) + (integrand_numerator[i+1]/integrand_denom[i+1]))*d_phi
+        dless_energy_integral = dless_energy_integral + trapezoid
+    
+    return dless_energy_integral
+
+def dimnless_angmom_integral(gamma, ecc):
+    """Numerically computes the dimensionless angular momentum integral required for eccentricity pumping
+    for retrograde orbiters. Uses simple trapezoid rule. Eqn 20 from Secunda et al. 2021
+    (2021ApJ...908L..27S). Derivation assumes AGN disk midplane density is powerlaw in radius
+    (see below definition of gamma). This is close enough to true for SG and TQM, and should
+    be true in general... but maybe you have a really strange disk model, so, be aware.
+
+    Parameters
+    ----------
+    gamma : float
+        power-law index for radial distribution of AGN disk midplane density (ie rho(r) \propto r^gamma)
+    ecc : float
+        current eccentricity of orbiter
+
+    Returns
+    -------
+    dless_angmom_integral : float
+        value of the dimensionless angular momentum integral (Eqn 20) from Secunda et al. 2021
+    """
+    # compute value of prefix to integral
+    integral_prefix = 1.0/(2.0*np.pi*np.sqrt(1.0-ecc**2))
+    # set resolution and range of integration, which goes from 0-2pi around the orbit
+    d_phi = 0.01
+    phi = np.arange(0.0, 2.0*np.pi, d_phi)
+    # set u substitution variable, per Eqn 20
+    u_sub_var = (1.0 + ecc*np.cos(phi))/(1.0 - ecc**2)
+    # compute denominator of the integrand (note same as for energy integral, eqn 19)
+    integrand_denom = pow((-1.0 + 3.0*u_sub_var + 2.0*np.sqrt(1.0-ecc**2)*pow(u_sub_var, 1.5)), 1.5)
+    # compute numerator of the integrand
+    integrand_numerator = (-np.sqrt(1.0-ecc**2) - pow(u_sub_var, -0.5))*pow(u_sub_var,(-gamma-2.0))
+
+    #trapezoid rule integration
+    dless_angmom_integral = 0.0
+    for i in range(len(phi)-1):
+        trapezoid = integral_prefix*0.5*((integrand_numerator[i]/integrand_denom[i]) + (integrand_numerator[i+1]/integrand_denom[i+1]))*d_phi
+        dless_angmom_integral = dless_angmom_integral + trapezoid
+
+    return dless_angmom_integral
+
+def delta_retro_ecc(mass_smbh, retrograde_bh_locations, retrograde_bh_masses, retrograde_bh_orb_ecc, disk_surf_model, disk_aspect_ratio_model, timestep, gamma):
+    """Computes the changed orbital eccentricities of retrograde orbiters fully embedded in an
+    AGN disk, computed approximately via Eqn 18 of Secunda et al. 2021 (2021ApJ...908L..27S), which
+    gives de^2/dt averaged over one orbit. The derivation assumes the AGN disk midplane density is 
+    powerlaw in radius ie rho(r) \propto r^(gamma). We make a number of possibly stupid approximations
+    here (in order from least concerning to most concerning, I think):
+
+    -powerlaw density function (this is ok in outskirts of SG disk where gamma=-3)
+    -numerically integrate some dimensionless integrals using a trapezoid rule (utility functions)
+    -assume the midplane density is the disk surface density/(aspect ratio * semi-major axis)
+    -assume the semi-major axis does not change over the whole timestep
+    -assume the rate of change of eccentricity per orbit is the same for the whole timestep
+    -neglect eccentricity damping (and semi-major axis change) due to GW 
+    (this is only important for small pericenter passages tho)
+
+    Parameters
+    ----------
+    mass_smbh : float
+        mass of the supermassive black hole in units of solar masses
+    retrograde_bh_locations : float array
+        semi-major axes of all retrograde orbiting embedded black holes in units of r_g(=G*mass_smbh/c^2)
+    retrograde_bh_masses : float array
+        masses of all retrograde orbiting embedded black holes in units of solar masses
+    retrograde_bh_orb_ecc : float array
+        eccentricities of all retrograde orbiting embedded black holes
+    disk_surf_model : function
+        returns AGN gas disk surface density in kg/m^2 given a distance from the SMBH in r_g
+    disk_aspect_ratio_model : function
+        returns AGN gas disk aspect ratio given a distance from the SMBH in r_g
+    timestep : float
+        size of timestep in years
+    gamma : float
+        powerlaw index of AGN disk midplane surface density function, ie rho(r) \propto r^(gamma)
+
+    Returns
+    -------
+    retrograde_bh_orb_ecc : float array
+        eccentricities of all retrograde orbiting embedded black holes after one timestep
+    """
+    # compute the period of each orbiter in years, given semi-major axis in r_g and mass_smbh in Msun
+    period = 3.15e7*2.0*np.pi*(np.sqrt(retrograde_bh_locations**3)/mass_smbh)* \
+        (scipy.constants.c**3/(scipy.constants.G*2.0e30))
+    num_orbits = timestep/period
+
+    lnLambda = 1.0 # this is probably a reasonable value most of the time
+    # compute mass density in kg/m^3 from surface density (in kg/m^2) and scale 
+    # height in meters(=aspect ratio*semi-major axis in r_g * r_g)
+    rho = disk_surf_model(retrograde_bh_locations)/ \
+        (disk_aspect_ratio_model(retrograde_bh_locations)*retrograde_bh_locations* \
+         scipy.constants.G*mass_smbh*2.0e30/scipy.constants.c**2)
+    # compute prefactor function f(a) Eqn 13 from Secunda et al 2021 (in output in SI--convert semi-major axes from r_g)
+    prefactor = 4.0*np.pi*lnLambda*(scipy.constants.G*retrograde_bh_masses*2.0e30)**2*rho* \
+        np.sqrt(retrograde_bh_locations/scipy.constants.c**2)
+
+    # now compute de^2 per period (from Eqn 18)--computed in SI as above--convert from r_g and Msun
+    delta_ecc_sq_per_period = -(prefactor*2.0*retrograde_bh_locations/(retrograde_bh_masses*2.0e30*scipy.constants.c**2)* \
+                                (1.0-retrograde_bh_orb_ecc**2) \
+                                    (dimnless_energy_integral(gamma, retrograde_bh_orb_ecc) + \
+                                     dimnless_angmom_integral(gamma, retrograde_bh_orb_ecc)/np.sqrt(1.0-retrograde_bh_orb_ecc**2)))*period
+    delta_ecc_sq_per_ts = delta_ecc_sq_per_period*num_orbits
+    delta_ecc = np.sqrt(delta_ecc_sq_per_ts)
+
+    retrograde_bh_orb_ecc = retrograde_bh_orb_ecc + delta_ecc
+
+    return retrograde_bh_orb_ecc
+
+

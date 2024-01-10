@@ -54,7 +54,7 @@ def change_spin_magnitudes(prograde_bh_spins, frac_Eddington_ratio, spin_torque_
     indices_bh_spin_up = np.ma.nonzero(prograde_bh_spin_up)
     #bh_new_spins[prograde_orb_ang_mom_indices]=bh_new_spins[prograde_orb_ang_mom_indices]+(4.4e-3*normalized_Eddington_ratio*normalized_spin_torque_condition*normalized_timestep)
     bh_new_spins[indices_bh_spin_up] = prograde_bh_spins[indices_bh_spin_up] + spin_iteration
-    print('BH spin up',bh_new_spins[indices_bh_spin_up])
+    #print('BH spin up',bh_new_spins[indices_bh_spin_up])
     #Spin down BH with orb ecc > e_crit
     bh_new_spins[indices_bh_spin_down] = prograde_bh_spins[indices_bh_spin_down] - spin_iteration
     #print(bh_new_spins[indices_bh_spin_down])

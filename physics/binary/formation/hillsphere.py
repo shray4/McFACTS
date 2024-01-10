@@ -339,12 +339,12 @@ def binary_check(prograde_bh_locations, prograde_bh_masses, mass_smbh, prograde_
                 (mass_smbh * 3.0)), (1.0/3.0))
     # compare separations to mutual Hill spheres - negative values mean possible binary formation
     allowed_min_form_criteria = allowed_separations - R_Hill_allowed_bin_test
-    print('criteria',allowed_min_form_criteria)
+    #print('criteria',allowed_min_form_criteria)
     # collect indices of possible real binaries (where separation is less than mutual Hill sphere)
     allowed_indx_form_criteria = np.where(allowed_min_form_criteria < 0)
-    print(allowed_indx_form_criteria)
+    #print(allowed_indx_form_criteria)
     allowed_idx_crit = allowed_indx_form_criteria[0]
-    print(allowed_idx_crit)
+    #print(allowed_idx_crit)
 
     if np.size(allowed_indx_form_criteria) >0: 
         #If multiple negative results in criteria
@@ -357,13 +357,13 @@ def binary_check(prograde_bh_locations, prograde_bh_masses, mass_smbh, prograde_
         for i in range(len(allowed_idx_crit)):
             item1[i] = sorted_allowed_bh_loc[allowed_idx_crit[i]]
             item2[i] = sorted_allowed_bh_loc[allowed_idx_crit[i]+1]         
-            print(item1[0],item2[0])
+            #print(item1[0],item2[0])
             item1_idx = np.where(prograde_bh_locations == item1[i])
             item2_idx = np.where(prograde_bh_locations == item2[i])
-            print(item1_idx[0],item2_idx[0])
+            #print(item1_idx[0],item2_idx[0])
             idx1 = item1_idx[0] 
             idx2 = item2_idx[0]
-            print(idx1,idx2)
+            #print(idx1,idx2)
 
         #for j in range(len(idx1)):
             #print(idx1[j],idx2[j]) 
@@ -418,10 +418,10 @@ def binary_check(prograde_bh_locations, prograde_bh_masses, mass_smbh, prograde_
     if np.count_nonzero(sorted_allowed_sequences) > 0:
         final_binary_indices = np.array([idx1,idx2])
 #        final_binary_indices = np.array([sorted_bh_location_indices[allowed_checked_binary_index], sorted_bh_location_indices[allowed_checked_binary_index+1]])
-        print(np.shape(final_binary_indices))
-        print(np.shape(final_binary_indices)[1])
+        #print(np.shape(final_binary_indices))
+        #print(np.shape(final_binary_indices)[1])
         #print(prograde_bh_locations[allowed_checked_binary_index],prograde_bh_locations[allowed_checked_binary_index+1])
     else: 
         final_binary_indices=np.empty_like(allowed_sequences_to_test)
-    #return all_binary_indices
-    return final_binary_indices
+    return all_binary_indices
+    #return final_binary_indices

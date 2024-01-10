@@ -61,10 +61,10 @@ max_initial_eccentricity = 0.3
 # timestep in years (float)
 timestep = 1.e4
 # For timestep=1.e4, number_of_timesteps=100 gives us 1Myr disk lifetime
-number_of_timesteps = 100
+number_of_timesteps = 20
 
 # Set the number of iterations to run multiple populations
-number_of_iterations = 5
+number_of_iterations = 1
 #
 # Other physics choices: 
 #
