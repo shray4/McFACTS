@@ -132,7 +132,7 @@ def dimnless_energy_integral(gamma, ecc):
     phi = np.arange(0.0, 2.0*np.pi, d_phi)
     # for each eccentricity (yes, has to be a for loop I think...)
     for j in range(len(ecc)):
-        # set u substitution variable, per Eqn 19
+        # set u substitution variable, per Eqn 21
         u_sub_var = (1.0 + ecc[j]*np.cos(phi))/(1.0 - ecc[j]**2)
         # compute denominator of the integrand (note same as for ang mom integral, eqn 20)
         integrand_denom = pow((-1.0 + 3.0*u_sub_var + 2.0*np.sqrt(1.0-ecc[j]**2)*pow(u_sub_var, 1.5)), 1.5)
@@ -174,7 +174,7 @@ def dimnless_angmom_integral(gamma, ecc):
     phi = np.arange(0.0, 2.0*np.pi, d_phi)
     # for each eccentricity (yes, has to be a for loop I think...)
     for j in range(len(ecc)):
-        # set u substitution variable, per Eqn 19
+        # set u substitution variable, per Eqn 21
         u_sub_var = (1.0 + ecc[j]*np.cos(phi))/(1.0 - ecc[j]**2)
         # compute denominator of the integrand (note same as for energy integral, eqn 19)
         integrand_denom = pow((-1.0 + 3.0*u_sub_var + 2.0*np.sqrt(1.0-ecc[j]**2)*pow(u_sub_var, 1.5)), 1.5)
@@ -228,10 +228,10 @@ def delta_retro_ecc(mass_smbh, retrograde_bh_locations, retrograde_bh_masses, re
         eccentricities of all retrograde orbiting embedded black holes after one timestep
     """
     # compute the period of each orbiter in years, given semi-major axis in r_g and mass_smbh in Msun
-    period = 3.15e7*2.0*np.pi*(np.sqrt(retrograde_bh_locations**3)/mass_smbh)* \
-        (scipy.constants.c**3/(scipy.constants.G*2.0e30))
+    period = 2.0*np.pi*(scipy.constants.G*2.0e30)/scipy.constants.c**3 \
+        *(np.sqrt(retrograde_bh_locations**3)*mass_smbh)/3.15e7
     num_orbits = timestep/period
-
+    
     lnLambda = 1.0 # this is probably a reasonable value most of the time
     # compute mass density in kg/m^3 from surface density (in kg/m^2) and scale 
     # height in meters(=aspect ratio*semi-major axis in r_g * r_g)
@@ -243,13 +243,16 @@ def delta_retro_ecc(mass_smbh, retrograde_bh_locations, retrograde_bh_masses, re
         np.sqrt(retrograde_bh_locations/scipy.constants.c**2)
 
     # now compute de^2 per period (from Eqn 18)--computed in SI as above--convert from r_g and Msun
-    delta_ecc_sq_per_period = -(prefactor*2.0*retrograde_bh_locations/(retrograde_bh_masses*2.0e30*scipy.constants.c**2)*(1.0-retrograde_bh_orb_ecc**2) \
+    # note that we are multiplying by -period because t_final-t_initial is actually -ive period
+    # this also yields a positive definite value for d(ecc^2) as expected
+    # and note also that we have to convert the period back from years to seconds here 
+    delta_ecc_sq_per_period = -(prefactor*2.0*retrograde_bh_locations/(retrograde_bh_masses*2.0e30*scipy.constants.c**2)*(1.0-retrograde_bh_orb_ecc**2)* \
                                     (dimnless_energy_integral(gamma, retrograde_bh_orb_ecc) + \
-                                     dimnless_angmom_integral(gamma, retrograde_bh_orb_ecc)/np.sqrt(1.0-retrograde_bh_orb_ecc**2)))*period
+                                     dimnless_angmom_integral(gamma, retrograde_bh_orb_ecc)/np.sqrt(1.0-retrograde_bh_orb_ecc**2)))*-(period*3.15e7)
     delta_ecc_sq_per_ts = delta_ecc_sq_per_period*num_orbits
-    delta_ecc = np.sqrt(delta_ecc_sq_per_ts)
-
-    retrograde_bh_orb_ecc = retrograde_bh_orb_ecc + delta_ecc
+    # delta ecc^2 = ecc_final^2 - ecc_initial^2 = delta_ecc_sq_per_ts
+    # solve for ecc_final:
+    retrograde_bh_orb_ecc = np.sqrt(delta_ecc_sq_per_ts + retrograde_bh_orb_ecc**2)
 
     return retrograde_bh_orb_ecc
 
