@@ -1,0 +1,21 @@
+Metadata-Version: 2.1
+Name: mcfacts
+Version: 0.0.0
+Summary: mcfacts
+Home-page: https://github.com/bmckernan/test_mcfacts
+Author: Barry McKernan, Saavik Ford, Harry Cook, Vera Delfavero, Richard O'Shaughnessy
+Author-email: 
+Maintainer: Barry McKernan, Saavik Ford, Harry Cook, Vera Delfavero, Richard O'Shaughnessy
+Maintainer-email: 
+License: MIT License
+Keywords: astronomy,information analysis,machine learning,physics
+Classifier: Development Status :: 3 - Alpha
+Classifier: Programming Language :: Python :: 3
+Classifier: Operating System :: OS Independent
+Classifier: Intended Audience :: Science/Research
+Classifier: Topic :: Scientific/Engineering :: Astronomy
+Classifier: Topic :: Scientific/Engineering :: Physics
+Classifier: Topic :: Scientific/Engineering :: Information Analysis
+Requires-Python: >=3.10
+
+Long description goes here...
