@@ -1658,15 +1658,95 @@ def main():
 
                 #Finished evolving binaries
 
-                #If a close encounter within mutual Hill sphere add a new Binary
-
-                # check which binaries should get made
-            close_encounters2 = hillsphere.binary_check2(
-                prograde_bh_locations, prograde_bh_masses, opts.mass_smbh, prograde_bh_orb_ecc, opts.crit_ecc
-            )
-            close_encounters_ns = hillspherens.binary_check2(
-                prograde_ns_locations, prograde_ns_masses, opts.mass_smbh, prograde_ns_orb_ecc, opts.crit_ecc
-            )
+#                #If a close encounter within mutual Hill sphere add a new Binary
+#
+#                # check which binaries should get made
+#            close_encounters2 = hillsphere.binary_check2(
+#                prograde_bh_locations, prograde_bh_masses, opts.mass_smbh, prograde_bh_orb_ecc, opts.crit_ecc
+#            )
+#            close_encounters_ns = hillspherens.binary_check2(
+#                prograde_ns_locations, prograde_ns_masses, opts.mass_smbh, prograde_ns_orb_ecc, opts.crit_ecc
+#            )
+#
+#                #print("Output of close encounters", close_encounters2)
+#                # print(close_encounters)
+#            if np.size(close_encounters2) > 0:
+#                    #print("Make binary at time ", time_passed)
+#                    #print("shape1",np.shape(close_encounters2)[1])
+#                    #print("shape0",np.shape(close_encounters2)[0])
+#                    # number of new binaries is length of 2nd dimension of close_encounters2
+#                    #number_of_new_bins = np.shape(close_encounters2)[1]
+#                    number_of_new_bins = np.shape(close_encounters2)[1]
+#                    #print("number of new bins", number_of_new_bins)
+#                    # make new binaries
+#                    binary_bh_array = add_new_binary.add_to_binary_array2(
+#                        rng,
+#                        binary_bh_array,
+#                        prograde_bh_locations,
+#                        prograde_bh_masses,
+#                        prograde_bh_spins,
+#                        prograde_bh_spin_angles,
+#                        prograde_bh_generations,
+#                        close_encounters2,
+#                        bin_index,
+#                        opts.retro,
+#                        opts.mass_smbh,
+#                    )
+#                    bin_index = bin_index + number_of_new_bins
+#                    #Count towards total of any binary ever made (including those that are ionized)
+#                    nbin_ever_made_index = nbin_ever_made_index + number_of_new_bins
+#                    #print("Binary array",binary_bh_array[:,0])
+#                    # delete corresponding entries for new binary members from singleton arrays
+#                    prograde_bh_locations = np.delete(prograde_bh_locations, close_encounters2)
+#                    prograde_bh_masses = np.delete(prograde_bh_masses, close_encounters2)
+#                    prograde_bh_spins = np.delete(prograde_bh_spins, close_encounters2)
+#                    prograde_bh_spin_angles = np.delete(prograde_bh_spin_angles, close_encounters2)
+#                    prograde_bh_generations = np.delete(prograde_bh_generations, close_encounters2)
+#                    prograde_bh_orb_ecc = np.delete(prograde_bh_orb_ecc, close_encounters2)
+#                    prograde_bh_orb_incl = np.delete(prograde_bh_orb_incl, close_encounters2)
+#            
+#                    #Empty close encounters
+#                    empty = []
+#                    close_encounters2 = np.array(empty)
+#
+#            if np.size(close_encounters_ns) > 0:
+#                    #print("Make binary at time ", time_passed)
+#                    #print("shape1",np.shape(close_encounters_ns)[1])
+#                    #print("shape0",np.shape(close_encounters_ns)[0])
+#                    # number of new binaries is length of 2nd dimension of close_encounters_ns
+#                    #number_of_new_ns_bins = np.shape(close_encounters_ns)[1]
+#                    number_of_new_ns_bins = np.shape(close_encounters_ns)[1]
+#                    #print("number of new NS bins", number_of_new_ns_bins)
+#                    # make new binaries
+#                    binary_ns_array = add_new_binary.add_to_binary_array2(
+#                        rng,
+#                        binary_ns_array,
+#                        prograde_ns_locations,
+#                        prograde_ns_masses,
+#                        prograde_ns_spins,
+#                        prograde_ns_spin_angles,
+#                        prograde_ns_generations,
+#                        close_encounters_ns,
+#                        bin_ns_index,
+#                        opts.retro,
+#                        opts.mass_smbh,
+#                    )
+#                    bin_ns_index = bin_ns_index + number_of_new_ns_bins
+#                    #Count towards total of any binary ever made (including those that are ionized)
+#                    nbin_ns_ever_made_index = nbin_ns_ever_made_index + number_of_new_ns_bins
+#                    #print("Binary array",binary_ns_array[:,0])
+#                    # delete corresponding entries for new binary members from singleton arrays
+#                    prograde_ns_locations = np.delete(prograde_ns_locations, close_encounters_ns)
+#                    prograde_ns_masses = np.delete(prograde_ns_masses, close_encounters_ns)
+#                    prograde_ns_spins = np.delete(prograde_ns_spins, close_encounters_ns)
+#                    prograde_ns_spin_angles = np.delete(prograde_ns_spin_angles, close_encounters_ns)
+#                    prograde_ns_generations = np.delete(prograde_ns_generations, close_encounters_ns)
+#                    prograde_ns_orb_ecc = np.delete(prograde_ns_orb_ecc, close_encounters_ns)
+#                    prograde_ns_orb_incl = np.delete(prograde_ns_orb_incl, close_encounters_ns)
+#            
+#                    #Empty close encounters
+#                    empty = []
+#                    close_encounters_ns = np.array(empty)
 
             prograde_nsbh_locations = np.append(prograde_bh_locations,prograde_ns_locations)
             prograde_nsbh_masses = np.append(prograde_bh_masses,prograde_ns_masses)
@@ -1679,86 +1759,6 @@ def main():
             close_encounters_nsbh = hillsphere.binary_check2(
                 prograde_nsbh_locations, prograde_nsbh_masses, opts.mass_smbh, prograde_nsbh_orb_ecc, opts.crit_ecc
             )
-
-                #print("Output of close encounters", close_encounters2)
-                # print(close_encounters)
-            if np.size(close_encounters2) > 0:
-                    #print("Make binary at time ", time_passed)
-                    #print("shape1",np.shape(close_encounters2)[1])
-                    #print("shape0",np.shape(close_encounters2)[0])
-                    # number of new binaries is length of 2nd dimension of close_encounters2
-                    #number_of_new_bins = np.shape(close_encounters2)[1]
-                    number_of_new_bins = np.shape(close_encounters2)[1]
-                    #print("number of new bins", number_of_new_bins)
-                    # make new binaries
-                    binary_bh_array = add_new_binary.add_to_binary_array2(
-                        rng,
-                        binary_bh_array,
-                        prograde_bh_locations,
-                        prograde_bh_masses,
-                        prograde_bh_spins,
-                        prograde_bh_spin_angles,
-                        prograde_bh_generations,
-                        close_encounters2,
-                        bin_index,
-                        opts.retro,
-                        opts.mass_smbh,
-                    )
-                    bin_index = bin_index + number_of_new_bins
-                    #Count towards total of any binary ever made (including those that are ionized)
-                    nbin_ever_made_index = nbin_ever_made_index + number_of_new_bins
-                    #print("Binary array",binary_bh_array[:,0])
-                    # delete corresponding entries for new binary members from singleton arrays
-                    prograde_bh_locations = np.delete(prograde_bh_locations, close_encounters2)
-                    prograde_bh_masses = np.delete(prograde_bh_masses, close_encounters2)
-                    prograde_bh_spins = np.delete(prograde_bh_spins, close_encounters2)
-                    prograde_bh_spin_angles = np.delete(prograde_bh_spin_angles, close_encounters2)
-                    prograde_bh_generations = np.delete(prograde_bh_generations, close_encounters2)
-                    prograde_bh_orb_ecc = np.delete(prograde_bh_orb_ecc, close_encounters2)
-                    prograde_bh_orb_incl = np.delete(prograde_bh_orb_incl, close_encounters2)
-            
-                    #Empty close encounters
-                    empty = []
-                    close_encounters2 = np.array(empty)
-
-            if np.size(close_encounters_ns) > 0:
-                    #print("Make binary at time ", time_passed)
-                    #print("shape1",np.shape(close_encounters_ns)[1])
-                    #print("shape0",np.shape(close_encounters_ns)[0])
-                    # number of new binaries is length of 2nd dimension of close_encounters_ns
-                    #number_of_new_ns_bins = np.shape(close_encounters_ns)[1]
-                    number_of_new_ns_bins = np.shape(close_encounters_ns)[1]
-                    #print("number of new NS bins", number_of_new_ns_bins)
-                    # make new binaries
-                    binary_ns_array = add_new_binary.add_to_binary_array2(
-                        rng,
-                        binary_ns_array,
-                        prograde_ns_locations,
-                        prograde_ns_masses,
-                        prograde_ns_spins,
-                        prograde_ns_spin_angles,
-                        prograde_ns_generations,
-                        close_encounters_ns,
-                        bin_ns_index,
-                        opts.retro,
-                        opts.mass_smbh,
-                    )
-                    bin_ns_index = bin_ns_index + number_of_new_ns_bins
-                    #Count towards total of any binary ever made (including those that are ionized)
-                    nbin_ns_ever_made_index = nbin_ns_ever_made_index + number_of_new_ns_bins
-                    #print("Binary array",binary_ns_array[:,0])
-                    # delete corresponding entries for new binary members from singleton arrays
-                    prograde_ns_locations = np.delete(prograde_ns_locations, close_encounters_ns)
-                    prograde_ns_masses = np.delete(prograde_ns_masses, close_encounters_ns)
-                    prograde_ns_spins = np.delete(prograde_ns_spins, close_encounters_ns)
-                    prograde_ns_spin_angles = np.delete(prograde_ns_spin_angles, close_encounters_ns)
-                    prograde_ns_generations = np.delete(prograde_ns_generations, close_encounters_ns)
-                    prograde_ns_orb_ecc = np.delete(prograde_ns_orb_ecc, close_encounters_ns)
-                    prograde_ns_orb_incl = np.delete(prograde_ns_orb_incl, close_encounters_ns)
-            
-                    #Empty close encounters
-                    empty = []
-                    close_encounters_ns = np.array(empty)
 
             if np.size(close_encounters_nsbh) > 0:
                     #print("Make NS-BH binary at time ", time_passed)
@@ -1786,18 +1786,29 @@ def main():
                     #Count towards total of any NS-BH binary ever made (including those that are ionized)
                     nbin_nsbh_ever_made_index = nbin_nsbh_ever_made_index + number_of_new_nsbh_bins
                     #print("Binary array",binary_nsbh_array[:,0])
-                    # delete corresponding entries for new binary members from combined singleton arrays
-                    prograde_nsbh_locations = np.delete(prograde_nsbh_locations, close_encounters_nsbh)
-                    prograde_nsbh_masses = np.delete(prograde_nsbh_masses, close_encounters_nsbh)
-                    prograde_nsbh_spins = np.delete(prograde_nsbh_spins, close_encounters_nsbh)
-                    prograde_nsbh_spin_angles = np.delete(prograde_nsbh_spin_angles, close_encounters_nsbh)
-                    prograde_nsbh_generations = np.delete(prograde_nsbh_generations, close_encounters_nsbh)
-                    prograde_nsbh_orb_ecc = np.delete(prograde_nsbh_orb_ecc, close_encounters_nsbh)
-                    prograde_nsbh_orb_incl = np.delete(prograde_nsbh_orb_incl, close_encounters_nsbh)
+                    #Split combined close encounters array into NS and BH versions, used to filter indices to be deleted from singleton arrays as normal
+                    close_encounters2 = np.where(close_encounters_nsbh < np.shape(prograde_bh_locations))
+                    close_encounters_ns = np.where(close_encounters_nsbh >= np.shape(prograde_bh_locations))
+                    #Remove offset from NS indices, since they're all after the black holes in the combined array
+                    close_encounters_ns = close_encounters_ns - np.shape(prograde_bh_locations)
+                    
+                    # delete corresponding entries for new BH binary members from singleton arrays
+                    prograde_bh_locations = np.delete(prograde_bh_locations, close_encounters2)
+                    prograde_bh_masses = np.delete(prograde_bh_masses, close_encounters2)
+                    prograde_bh_spins = np.delete(prograde_bh_spins, close_encounters2)
+                    prograde_bh_spin_angles = np.delete(prograde_bh_spin_angles, close_encounters2)
+                    prograde_bh_generations = np.delete(prograde_bh_generations, close_encounters2)
+                    prograde_bh_orb_ecc = np.delete(prograde_bh_orb_ecc, close_encounters2)
+                    prograde_bh_orb_incl = np.delete(prograde_bh_orb_incl, close_encounters2)
+                    # delete corresponding entries for new NS binary members from singleton arrays
+                    prograde_ns_locations = np.delete(prograde_ns_locations, close_encounters_ns)
+                    prograde_ns_masses = np.delete(prograde_ns_masses, close_encounters_ns)
+                    prograde_ns_spins = np.delete(prograde_ns_spins, close_encounters_ns)
+                    prograde_ns_spin_angles = np.delete(prograde_ns_spin_angles, close_encounters_ns)
+                    prograde_ns_generations = np.delete(prograde_ns_generations, close_encounters_ns)
+                    prograde_ns_orb_ecc = np.delete(prograde_ns_orb_ecc, close_encounters_ns)
+                    prograde_ns_orb_incl = np.delete(prograde_ns_orb_incl, close_encounters_ns)
 
-                    #Copy over deletions from combined arrays to singleton arrays
-                    prograde_bh_locations = np.delete(prograde_nsbh_locations, np.shape(prograde_ns_locations)[0] - np.shape(close_encounters_nsbh)[1])
-            
                     #Empty close encounters and NSBH arrays
                     empty = []
                     prograde_nsbh_locations = np.array(empty)
@@ -1807,6 +1818,8 @@ def main():
                     prograde_nsbh_generations = np.array(empty)
                     prograde_nsbh_orb_ecc = np.array(empty)
                     prograde_nsbh_orb_incl = np.array(empty)
+                    close_encounters2 = np.array(empty)
+                    close_encounters_ns = np.array(empty)
                     close_encounters_nsbh = np.array(empty)
 
             #After this time period, was there a disk capture via orbital grind-down?
