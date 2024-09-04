@@ -1,6 +1,6 @@
 import numpy as np
 
-#NS feedback function. For unclear reasons, I made the whole thing just return a list of zeros instead of actually using most of the inputs.
+#NS feedback function. Saavik says feedback shouldn't be super important, hence why the whole thing is an array of zeros, but this may need to be reconsidered later.
 
 def feedback_hankla(prograde_ns_locations, disk_surf_model, frac_Eddington_ratio, alpha):
     """_summary_
