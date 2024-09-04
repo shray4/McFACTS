@@ -1848,6 +1848,7 @@ def main():
                     #Remove offset from NS indices, since they're all after the black holes in the combined array
                     close_encounters_ns = np.subtract((close_encounters_ns), (np.shape(prograde_bh_locations)))
                     
+                    #Extra line for committing purposes
                     #Take out NS-NS and BH-BH indices from the main NSBH binary array and add them to their own arrays
                     #Find the indices in the combined array where NS are both objects. (If the masses of both objects are below 2.66, but greater than zero so it doesn't say that empty indices are NS-NS binaries)
                     binary_array_where_ns_are_both = np.where(((binary_nsbh_array[2,:] < 2.66) & (binary_nsbh_array[2,:] > 0)) & ((binary_nsbh_array[3,:] < 2.66) & (binary_nsbh_array[3,:] > 0)))
