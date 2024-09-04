@@ -1,5 +1,8 @@
 import numpy as np
 
+#NS hill sphere function. Is currently copy-pasted from the BH function, with only changes to variable names.
+#Given that its only use is in the NS-specific binary formation function,
+#it can probably be deleted as soon as the combined binary function is gotten working.
 
 def calculate_hill_sphere(prograde_ns_locations, prograde_ns_masses, mass_smbh):
     #Return the Hill sphere radius (R_Hill) for an array of prograde NS where

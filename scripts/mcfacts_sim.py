@@ -19,6 +19,7 @@ from mcfacts.inputs import data as input_data
 
 from mcfacts.objects.agnobject import AGNStar
 
+#Importing NS variants of certain functions as well. Many may not be necessary and could be replaced by feeding NS inputs into BH functions.
 from mcfacts.setup import setupdiskblackholes
 from mcfacts.setup import setupdiskneutronstars
 from mcfacts.setup import setupdiskstars
@@ -46,6 +47,7 @@ from mcfacts.physics.binary.merge import tgw
 #from mcfacts.tests import tests
 from mcfacts.outputs import mergerfile
 
+#NS and NSBH binaries use the same field names as BH ones.
 binary_field_names="R1 R2 M1 M2 a1 a2 theta1 theta2 sep com t_gw merger_flag t_mgr  gen_1 gen_2  bin_ang_mom bin_ecc bin_incl bin_orb_ecc nu_gw h_bin"
 binary_ns_field_names="R1 R2 M1 M2 a1 a2 theta1 theta2 sep com t_gw merger_flag t_mgr  gen_1 gen_2  bin_ang_mom bin_ecc bin_incl bin_orb_ecc nu_gw h_bin"
 binary_nsbh_field_names="R1 R2 M1 M2 a1 a2 theta1 theta2 sep com t_gw merger_flag t_mgr  gen_1 gen_2  bin_ang_mom bin_ecc bin_incl bin_orb_ecc nu_gw h_bin"
@@ -261,7 +263,7 @@ def main():
             opts.nsc_index_inner,
         )
 
-        #Set up number of NS in disk
+        #Set up number of NS in disk (Note that this currently creates far too many, see the function for more details)
         n_ns = setupdiskneutronstars.setup_disk_nns(
             opts.M_nsc,
             opts.nbh_nns_ratio,
@@ -339,6 +341,7 @@ def main():
             n_ns,
             opts.disk_outer_radius,
         )
+        #Only needs the number of NS because the masses are all 1.4
         ns_initial_masses = setupdiskneutronstars.setup_disk_neutronstars_masses(
             n_ns,
         )
@@ -612,6 +615,7 @@ def main():
         # Set up merger array (identical to binary array)
         merger_array = np.zeros((integer_nbinprop,integer_test_bin_number))
         merger_ns_array = np.zeros((integer_ns_nbinprop,integer_test_bin_ns_number))
+        merger_nsbh_array = np.zeros((integer_nsbh_nbinprop,integer_test_bin_nsbh_number))
         merger_stars_array = np.zeros((integer_stars_nbinprop,integer_test_bin_stars_number))
     
         # Set up output array (mergerfile)
@@ -823,7 +827,7 @@ def main():
                 opts.crit_ecc
             )
 
-            # Damp BH orbital eccentricity
+            # Damp orbital eccentricity
             prograde_bh_orb_ecc = orbital_ecc.orbital_ecc_damping(
                 opts.mass_smbh,
                 prograde_bh_locations,
@@ -1293,6 +1297,10 @@ def main():
                     if opts.verbose:
                         print("No BH binaries formed yet")
                         # No Binaries present in bin_array. Nothing to do.
+            
+            #Big NS binary function ahead: Mostly copy-pasted over from the BH one, but does actually need to be separate in order
+            #not to mess with any of the BH-specific arrays, and because some elements of it may actually need to vary.
+            #Big NS-BH binary function has not yet been made, but it will need to be once the formation function is working.
 
             # Do things to the NS binaries--first check if there are any:
             if bin_ns_index > 0:
@@ -1509,8 +1517,8 @@ def main():
                     )
                     
                     #Check and see if merger flagged during hardening (row 11, if negative)
-                    merger_flags = binary_ns_array[11,:]
-                    any_merger = np.count_nonzero(merger_flags)
+                    merger_ns_flags = binary_ns_array[11,:]
+                    any_merger = np.count_nonzero(merger_ns_flags)
 
                     # Check and see if binary ionization flag raised. 
                     ionization_flag = evolve.ionization_check(binary_ns_array, bin_ns_index, opts.mass_smbh)
@@ -1569,64 +1577,64 @@ def main():
                     #dynamics_binary_array = dynamics.circular_binaries_encounters_prograde(rng,opts.mass_smbh, prograde_ns_locations, prograde_ns_masses, disk_surf_model, disk_aspect_ratio_model, ns_orb_ecc, timestep, opts.crit_ecc, opts.de,norm_tgw,bin_array,bindex,integer_ns_nbinprop)         
                 
                     if opts.verbose:
-                        print(merger_flags)
-                    merger_indices = np.where(merger_flags < 0.0)
-                    if isinstance(merger_indices,tuple):
-                        merger_indices = merger_indices[0]
+                        print(merger_ns_flags)
+                    merger_ns_indices = np.where(merger_ns_flags < 0.0)
+                    if isinstance(merger_ns_indices,tuple):
+                        merger_ns_indices = merger_ns_indices[0]
                     if opts.verbose:
-                        print(merger_indices)
-                    #print(binary_ns_array[:,merger_indices])
+                        print(merger_ns_indices)
+                    #print(binary_ns_array[:,merger_ns_indices])
                     if any_merger > 0:
                         for i in range(any_merger):
                             #print("Merger!")
                             # send properties of merging objects to static variable names
-                            #mass_1[i] = binary_ns_array[2,merger_indices[i]]
-                            #mass_2[i] = binary_ns_array[3,merger_indices[i]]
-                            #spin_1[i] = binary_ns_array[4,merger_indices[i]]
-                            #spin_2[i] = binary_ns_array[5,merger_indices[i]]
-                            #angle_1[i] = binary_ns_array[6,merger_indices[i]]
-                            #angle_2[i] = binary_ns_array[7,merger_indices[i]]
-                            #bin_ang_mom[i] = binary_ns_array[16,merger_indices]
+                            #mass_1[i] = binary_ns_array[2,merger_ns_indices[i]]
+                            #mass_2[i] = binary_ns_array[3,merger_ns_indices[i]]
+                            #spin_1[i] = binary_ns_array[4,merger_ns_indices[i]]
+                            #spin_2[i] = binary_ns_array[5,merger_ns_indices[i]]
+                            #angle_1[i] = binary_ns_array[6,merger_ns_indices[i]]
+                            #angle_2[i] = binary_ns_array[7,merger_ns_indices[i]]
+                            #bin_ang_mom[i] = binary_ns_array[16,merger_ns_indices]
                             if time_passed <= opts.timestep:
-                                print("time_passed,loc1,loc2",time_passed,binary_ns_array[0,merger_indices[i]],binary_ns_array[1,merger_indices[i]])
+                                print("time_passed,loc1,loc2",time_passed,binary_ns_array[0,merger_ns_indices[i]],binary_ns_array[1,merger_ns_indices[i]])
 
                         # calculate merger properties
                             merged_mass = tichy08.merged_mass(
-                                binary_ns_array[2,merger_indices[i]],
-                                binary_ns_array[3,merger_indices[i]],
-                                binary_ns_array[4,merger_indices[i]],
-                                binary_ns_array[5,merger_indices[i]]
+                                binary_ns_array[2,merger_ns_indices[i]],
+                                binary_ns_array[3,merger_ns_indices[i]],
+                                binary_ns_array[4,merger_ns_indices[i]],
+                                binary_ns_array[5,merger_ns_indices[i]]
                             )
                             merged_spin = tichy08.merged_spin(
-                                binary_ns_array[2,merger_indices[i]],
-                                binary_ns_array[3,merger_indices[i]],
-                                binary_ns_array[4,merger_indices[i]],
-                                binary_ns_array[5,merger_indices[i]],
-                                binary_ns_array[16,merger_indices[i]]
+                                binary_ns_array[2,merger_ns_indices[i]],
+                                binary_ns_array[3,merger_ns_indices[i]],
+                                binary_ns_array[4,merger_ns_indices[i]],
+                                binary_ns_array[5,merger_ns_indices[i]],
+                                binary_ns_array[16,merger_ns_indices[i]]
                             )
                             merged_chi_eff = chieff.chi_effective(
-                                binary_ns_array[2,merger_indices[i]],
-                                binary_ns_array[3,merger_indices[i]],
-                                binary_ns_array[4,merger_indices[i]],
-                                binary_ns_array[5,merger_indices[i]],
-                                binary_ns_array[6,merger_indices[i]],
-                                binary_ns_array[7,merger_indices[i]],
-                                binary_ns_array[16,merger_indices[i]]
+                                binary_ns_array[2,merger_ns_indices[i]],
+                                binary_ns_array[3,merger_ns_indices[i]],
+                                binary_ns_array[4,merger_ns_indices[i]],
+                                binary_ns_array[5,merger_ns_indices[i]],
+                                binary_ns_array[6,merger_ns_indices[i]],
+                                binary_ns_array[7,merger_ns_indices[i]],
+                                binary_ns_array[16,merger_ns_indices[i]]
                             )
                             merged_chi_p = chieff.chi_p(
-                                binary_ns_array[2,merger_indices[i]],
-                                binary_ns_array[3,merger_indices[i]],
-                                binary_ns_array[4,merger_indices[i]],
-                                binary_ns_array[5,merger_indices[i]],
-                                binary_ns_array[6,merger_indices[i]],
-                                binary_ns_array[7,merger_indices[i]],
-                                binary_ns_array[16,merger_indices[i]],
-                                binary_ns_array[17,merger_indices[i]]
+                                binary_ns_array[2,merger_ns_indices[i]],
+                                binary_ns_array[3,merger_ns_indices[i]],
+                                binary_ns_array[4,merger_ns_indices[i]],
+                                binary_ns_array[5,merger_ns_indices[i]],
+                                binary_ns_array[6,merger_ns_indices[i]],
+                                binary_ns_array[7,merger_ns_indices[i]],
+                                binary_ns_array[16,merger_ns_indices[i]],
+                                binary_ns_array[17,merger_ns_indices[i]]
                             )
                             merged_ns_array[:,n_ns_mergers_so_far + i] = mergerfile.merged_ns(
                                 merged_ns_array,
                                 binary_ns_array,
-                                merger_indices,
+                                merger_ns_indices,
                                 i,
                                 merged_chi_eff,
                                 merged_mass,
@@ -1636,20 +1644,20 @@ def main():
                                 merged_chi_p,
                                 time_passed
                             )
-                        #    print("Merger properties (M_f,a_f,Chi_eff,Chi_p,theta1,theta2", merged_mass, merged_spin, merged_chi_eff, merged_chi_p,binary_ns_array[6,merger_indices[i]], binary_ns_array[7,merger_indices[i]],)
+                        #    print("Merger properties (M_f,a_f,Chi_eff,Chi_p,theta1,theta2", merged_mass, merged_spin, merged_chi_eff, merged_chi_p,binary_ns_array[6,merger_ns_indices[i]], binary_ns_array[7,merger_ns_indices[i]],)
                         # do another thing
-                        merger_array[:,merger_indices] = binary_ns_array[:,merger_indices]
+                        merger_ns_array[:,merger_ns_indices] = binary_ns_array[:,merger_ns_indices]
                         #Reset merger marker to zero
-                        #n_ns_mergers_so_far=int(number_of_mergers)
-                        #Remove merged binary from binary array. Delete column where merger_indices is the label.
-                        #print("!Merger properties!",binary_ns_array[:,merger_indices],merger_array[:,merger_indices],merged_ns_array)
-                        binary_ns_array=np.delete(binary_ns_array,merger_indices,1)
+                        #n_ns_mergers_so_far=int(number_of_ns_mergers)
+                        #Remove merged binary from binary array. Delete column where merger_ns_indices is the label.
+                        #print("!Merger properties!",binary_ns_array[:,merger_ns_indices],merger_ns_array[:,merger_ns_indices],merged_ns_array)
+                        binary_ns_array=np.delete(binary_ns_array,merger_ns_indices,1)
                 
                         #Reduce number of binaries by number of mergers
-                        bin_ns_index = bin_ns_index - len(merger_indices)
+                        bin_ns_index = bin_ns_index - len(merger_ns_indices)
                         #print("bin index",bin_ns_index)
                         #Find relevant properties of merged NS to add to single NS arrays
-                        num_mergers_this_timestep = len(merger_indices)
+                        num_mergers_this_timestep = len(merger_ns_indices)
                 
                         #print("num mergers this timestep",num_mergers_this_timestep)
                         #print("n_ns_mergers_so_far",n_ns_mergers_so_far)    
@@ -1662,8 +1670,8 @@ def main():
                             merged_ns_gen = np.maximum(merged_ns_array[11,n_ns_mergers_so_far + i],merged_ns_array[12,n_ns_mergers_so_far + i]) + 1.0 
                         #print("Merger at=",merged_ns_com,merged_mass,merged_spin,merged_spin_angle,merged_ns_gen)
                         # Add to number of mergers
-                        n_ns_mergers_so_far += len(merger_indices)
-                        number_of_mergers += len(merger_indices)
+                        n_ns_mergers_so_far += len(merger_ns_indices)
+                        number_of_ns_mergers += len(merger_ns_indices)
 
                         # Append new merged NS to arrays of single NS locations, masses, spins, spin angles & gens
                         # For now add 1 new orb ecc term of 0.01. TO DO: calculate v_kick and resulting perturbation to orb ecc.
@@ -1678,10 +1686,10 @@ def main():
                         if opts.verbose:
                             print("New NS locations", sorted_prograde_ns_locations)
                         #print("Merger Flag!")
-                        #print(number_of_mergers)
+                        #print(number_of_ns_mergers)
                         #print("Time ", time_passed)
                         if opts.verbose:
-                            print(merger_array)
+                            print(merger_ns_array)
                     else:                
                         # No merger
                         # do nothing! hardening should happen FIRST (and now it does!)
@@ -1695,6 +1703,12 @@ def main():
                         # No Binaries present in bin_array. Nothing to do.
 
                 #Finished evolving binaries
+
+#This whole following section has been commented out because it contains the independent BH-BH and NS-NS binary formation functions.
+#The combined NS-BH binary forming function should be used instead in the long term, because otherwise BH or NS could form
+#binaries with themselves before having the opportunity to form binaries with each other. However, that function is currently
+#broken for an unknown reason, so commenting that one out and then uncommenting the separated functions would be better for
+#testing other things first. More documentation on the combined function is below.
 
 #                #If a close encounter within mutual Hill sphere add a new Binary
 #
@@ -1786,6 +1800,10 @@ def main():
 #                    empty = []
 #                    close_encounters_ns = np.array(empty)
 
+#In order for the close encounter check function to work, it needs one large array fed into it. This block creates new arrays
+#that have all the combined data on the NS and BH, so that they can be fed directly into the function. This also means that
+#BH-BH and NS-NS binaries need to be filtered out of the combined results later, which seems to be causing some kind of fatal error.
+
             prograde_nsbh_locations = np.append(prograde_bh_locations,prograde_ns_locations)
             prograde_nsbh_masses = np.append(prograde_bh_masses,prograde_ns_masses)
             prograde_nsbh_spins = np.append(prograde_bh_spins,prograde_ns_spins)
@@ -1799,13 +1817,13 @@ def main():
             )
 
             if np.size(close_encounters_nsbh) > 0:
-                    #print("Make NS-BH binary at time ", time_passed)
+                    #print("Make binary at time ", time_passed)
                     #print("shape1",np.shape(close_encounters_nsbh)[1])
                     #print("shape0",np.shape(close_encounters_nsbh)[0])
                     # number of new binaries is length of 2nd dimension of close_encounters_nsbh
                     #number_of_new_nsbh_bins = np.shape(close_encounters_nsbh)[1]
                     number_of_new_nsbh_bins = np.shape(close_encounters_nsbh)[1]
-                    #print("number of new NS-BH bins", number_of_new_nsbh_bins)
+                    #print("number of new bins", number_of_new_nsbh_bins)
                     # make new binaries
                     binary_nsbh_array = add_new_binary.add_to_binary_array2(
                         rng,
@@ -1828,8 +1846,55 @@ def main():
                     close_encounters2 = np.where(close_encounters_nsbh < np.shape(prograde_bh_locations))
                     close_encounters_ns = np.where(close_encounters_nsbh >= np.shape(prograde_bh_locations))
                     #Remove offset from NS indices, since they're all after the black holes in the combined array
-                    close_encounters_ns = close_encounters_ns - np.shape(prograde_bh_locations)
+                    close_encounters_ns = np.subtract((close_encounters_ns), (np.shape(prograde_bh_locations)))
                     
+                    #Take out NS-NS and BH-BH indices from the main NSBH binary array and add them to their own arrays
+                    #Find the indices in the combined array where NS are both objects. (If the masses of both objects are below 2.66, but greater than zero so it doesn't say that empty indices are NS-NS binaries)
+                    binary_array_where_ns_are_both = np.where(((binary_nsbh_array[2,:] < 2.66) & (binary_nsbh_array[2,:] > 0)) & ((binary_nsbh_array[3,:] < 2.66) & (binary_nsbh_array[3,:] > 0)))
+                    #If the array isn't empty or doesn't only have one zero in it
+                    if(np.size(binary_array_where_ns_are_both) > 1):
+                        #Then add the data on those binaries to the NS-NS binary array
+                        binary_ns_array = np.append(binary_ns_array,binary_nsbh_array[binary_array_where_ns_are_both],axis=0)
+                        #And remove it from the NS-BH binary array
+                        binary_nsbh_array = np.delete(binary_nsbh_array,binary_array_where_ns_are_both,axis=0)
+                    elif(binary_array_where_ns_are_both != (np.array(([],),))):
+                        #Same function as above; the if is a failsafe to check whether the only index has a value
+                        binary_ns_array = np.append(binary_ns_array,binary_nsbh_array[binary_array_where_ns_are_both],axis=0)
+                        binary_nsbh_array = np.delete(binary_nsbh_array,binary_array_where_ns_are_both,axis=0)
+                    #Increment the NS binary index
+                    bin_ns_index = bin_ns_index + np.size(binary_array_where_ns_are_both)
+                    #Decrement the NS-BH binary index
+                    bin_nsbh_index = bin_nsbh_index - np.size(binary_array_where_ns_are_both)
+                    #Increment the amount of NS binaries ever made
+                    nbin_ns_ever_made_index = nbin_ns_ever_made_index + np.size(binary_array_where_ns_are_both)
+                    #Decrement the amount of NS-BH binaries ever made
+                    nbin_nsbh_ever_made_index = nbin_nsbh_ever_made_index - np.size(binary_array_where_ns_are_both)
+                    #Find the indices in the combined array where BH are both objects. (If the masses of both objects are greater than or equal to 2.66, and also greater than zero because you never know)
+                    binary_array_where_bh_are_both = np.where(((binary_nsbh_array[2,:] >= 2.66)  & (binary_nsbh_array[2,:] > 0)) & ((binary_nsbh_array[3,:] >= 2.66) & (binary_nsbh_array[3,:] > 0)))
+                    #If the array isn't empty or doesn't only have one zero in it
+                    if(np.size(binary_array_where_bh_are_both) > 1):
+                        #Then add the data on those binaries to the BH-BH binary array
+                        #THIS LINE IS WHERE THE FATAL ERROR HAPPENS! The function seems to work okay for a few timesteps, until some BH-BH binaries are actually formed.
+                        #Then, it refuses to append the data to the BH-BH binary array, because that array decreases in size over time (One row of 22 gets removed every timestep)
+                        #and I can't figure out where the decrease in size is happening. I put print np.size of the binary_bh_array before and after every instance of
+                        #binary_bh_array = in mcfacts_sim, but it seemed to be changing before or after all of them. It's probably off in some sub-function I modified somewhere,
+                        #or maybe even a part of this function that I forgot about/misunderstood the syntax for, but I couldn't find out where in time to make this whole section actually work. Sorry about that.
+                        binary_bh_array = np.append(binary_bh_array,binary_nsbh_array[binary_array_where_bh_are_both],axis=0)
+                        #And remove it from the NS-BH binary array
+                        binary_nsbh_array = np.delete(binary_nsbh_array,binary_array_where_bh_are_both,axis=0)
+                    elif(binary_array_where_bh_are_both != (np.array(([0]),))):
+                        #Same function as above; the if is a failsafe to check whether the only index has a value
+                        binary_bh_array = np.append(binary_bh_array,binary_nsbh_array[binary_array_where_bh_are_both],axis=0)
+                        binary_nsbh_array = np.delete(binary_nsbh_array,binary_array_where_bh_are_both,axis=0)
+                    #Increment the BH binary index
+                    bin_index = bin_index + np.size(binary_array_where_bh_are_both)
+                    #Decrement the NS-BH binary index
+                    bin_nsbh_index = bin_nsbh_index - np.size(binary_array_where_bh_are_both)
+                    #Increment the number of BH binaries ever made
+                    nbin_ever_made_index = nbin_ever_made_index + np.size(binary_array_where_bh_are_both)
+                    #Decrement the number of NS-BH binaries ever made
+                    nbin_nsbh_ever_made_index = nbin_nsbh_ever_made_index - np.size(binary_array_where_bh_are_both)
+
                     # delete corresponding entries for new BH binary members from singleton arrays
                     prograde_bh_locations = np.delete(prograde_bh_locations, close_encounters2)
                     prograde_bh_masses = np.delete(prograde_bh_masses, close_encounters2)
@@ -1847,6 +1912,7 @@ def main():
                     prograde_ns_orb_ecc = np.delete(prograde_ns_orb_ecc, close_encounters_ns)
                     prograde_ns_orb_incl = np.delete(prograde_ns_orb_incl, close_encounters_ns)
 
+
                     #Empty close encounters and NSBH arrays
                     empty = []
                     prograde_nsbh_locations = np.array(empty)
@@ -1859,6 +1925,9 @@ def main():
                     close_encounters2 = np.array(empty)
                     close_encounters_ns = np.array(empty)
                     close_encounters_nsbh = np.array(empty)
+                    #These lines might have something to do with the error? Changing them to empty arrays makes a different but I think related error occur.
+                    binary_array_where_ns_are_both = 0
+                    binary_array_where_bh_are_both = 0
 
             #After this time period, was there a disk capture via orbital grind-down?
             # To do: What eccentricity do we want the captured BH to have? Right now ecc=0.0? Should it be ecc<h at a?             
@@ -2128,8 +2197,8 @@ def main():
     #print("emris_array_pop",emris_array_pop)
     np.savetxt(os.path.join(opts.work_directory, population_save_name), np.vstack(merged_bh_array_pop), header=population_header)
     np.savetxt(os.path.join(opts.work_directory, survivors_save_name), np.vstack(surviving_bh_array_pop))
-    np.savetxt(os.path.join(opts.work_directory,emris_save_name),np.vstack(emris_array_pop))
+    #np.savetxt(os.path.join(opts.work_directory,emris_save_name),np.vstack(emris_array_pop))
     #np.savetxt(os.path.join(opts.work_directory,emris_save_name),(emris_array_pop))
-    np.savetxt(os.path.join(opts.work_directory,gws_save_name),np.vstack(gw_array_pop))
+    #np.savetxt(os.path.join(opts.work_directory,gws_save_name),np.vstack(gw_array_pop))
 if __name__ == "__main__":
     main()

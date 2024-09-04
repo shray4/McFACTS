@@ -1,5 +1,13 @@
 import numpy as np
 
+#Function to set up the neutron stars in the AGN disk.
+#Almost everything is copy-pasted from the BH setup function and works the same way, except for two things:
+#The masses have no random component and are currently all set as 1.4 solar masses.
+#And the number of neutron stars is currently way too large, at roughly 1500 or so.
+#This is because I messed up and made the number of neutron stars relative to the number of stars instead of the number of black holes,
+#(Also made this error with the masses, but since they're all 1.4 it doesn't actually matter right now)
+#and then attempted to fix it by changing the variable name but never got around to changing the calculations.
+#However, it could also be somewhat useful to see if there are any issues with the other functions that only crop up rarely, so the priority for fixing it isn't necessarily too high.
 
 def setup_disk_neutronstars_location(rng, n_ns, disk_outer_radius):
     #Return an array of NS locations distributed randomly uniformly in disk
@@ -15,7 +23,7 @@ def setup_prior_neutronstars_indices(rng, prograde_n_ns, prior_ns_locations):
     return ns_indices
 
 def setup_disk_neutronstars_masses(n_ns):
-    #Return an array of NS initial masses for a given powerlaw index and max mass
+    #Return an array of NS initial masses, which are all 1.4
     integer_nns = int(n_ns)
     ns_initial_masses = 1.4 * np.ones(integer_nns)
     return ns_initial_masses
@@ -114,6 +122,7 @@ def setup_disk_neutronstars_circularized(rng, n_ns,crit_ecc):
 
 def setup_disk_nns(M_nsc,nbh_nns_ratio,mns_mstar_ratio,r_nsc_out,nsc_index_outer,mass_smbh,disk_outer_radius,h_disk_average,r_nsc_crit,nsc_index_inner):
     # Return the integer number of NS in the AGN disk as calculated from NSC inputs assuming isotropic distribution of NSC orbits
+    #CURRENTLY CREATES WAY TOO MANY NS! Right now, the function is based off the ratio of stars to neutron stars. This will need to be changed.
     # To do: Calculate when R_disk_outer is not equal to the r_nsc_crit
     # To do: Calculate when disky NSC population of NS in plane/out of plane.
     # Housekeeping:

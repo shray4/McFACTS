@@ -1,5 +1,8 @@
 import numpy as np
 
+#NS spin change function. Is currently copy-pasted from the BH function, with only changes to variable names.
+#May not actually be necessary. NS inputs could just be fed to the BH function in mcfacts_sim.
+
 def change_spin_magnitudes(prograde_ns_spins, frac_ns_Eddington_ratio, spin_torque_condition, timestep, prograde_ns_orb_ecc, e_crit):
     """Update the spin magnitude of the embedded black holes based on their accreted mass
         in this timestep.

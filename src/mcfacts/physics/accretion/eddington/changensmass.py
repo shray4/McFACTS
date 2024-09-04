@@ -1,7 +1,9 @@
 import numpy as np
 
+#NS mass accretion function. Is currently copy-pasted from the BH function, with only changes to variable names.
+#May not actually be necessary. NS inputs could just be fed to the BH function in mcfacts_sim.
 
-def change_mass(prograde_ns_masses, frac_Eddington_ratio, mass_growth_Edd_rate, timestep):
+def change_mass(prograde_ns_masses, frac_ns_Eddington_ratio, mass_growth_Edd_rate, timestep):
     """Given initial neutron star masses at start of timestep, add mass according to
         chosen NS mass accretion prescription
 
@@ -9,7 +11,7 @@ def change_mass(prograde_ns_masses, frac_Eddington_ratio, mass_growth_Edd_rate, 
     ----------
     prograde_ns_masses : float array
         initial masses of neutron stars in prograde orbits around SMBH, units of solar masses
-    frac_Eddington_ratio : float
+    frac_ns_Eddington_ratio : float
         user chosen input set by input file; Accretion rate of fully embedded neutron star
         in units of Eddington accretion rate. 1.0=embedded NS accreting at Eddington.
         Super-Eddington accretion rates are permitted.
@@ -24,6 +26,6 @@ def change_mass(prograde_ns_masses, frac_Eddington_ratio, mass_growth_Edd_rate, 
         masses of neutron stars after accreting at prescribed rate for one timestep
     """
     # Mass grows exponentially for length of timestep:
-    ns_new_masses = prograde_ns_masses*np.exp(mass_growth_Edd_rate*frac_Eddington_ratio*timestep)
+    ns_new_masses = prograde_ns_masses*np.exp(mass_growth_Edd_rate*frac_ns_Eddington_ratio*timestep)
 
     return ns_new_masses

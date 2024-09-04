@@ -8,6 +8,7 @@ from importlib import resources as impresources
 from mcfacts.inputs import data
 
 # Dictionary of types
+#NS-related inputs are not currently listed in the function hovertext.
 INPUT_TYPES = {
     'disk_model_name' : str,
     'disk_model_use_pagn': bool,

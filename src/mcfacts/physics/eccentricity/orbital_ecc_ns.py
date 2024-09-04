@@ -1,5 +1,8 @@
 import numpy as np
 
+#NS orbital eccentricity damping function. Is currently copy-pasted from the BH function, with only changes to variable names.
+#May not actually be necessary. NS inputs could just be fed to the BH function in mcfacts_sim.
+
 def orbital_ecc_damping(mass_smbh, prograde_ns_locations, prograde_ns_masses, disk_surf_model, disk_aspect_ratio_model, ns_orb_ecc, timestep, crit_ecc):
     """"Return array of NS orbital eccentricities damped according to a prescription
     Use Tanaka & Ward (2004)  t_damp = M^3/2 h^4 / (2^1/2 m Sigma a^1/2 G )

@@ -1,5 +1,7 @@
 import numpy as np
 
+#NS feedback function. For unclear reasons, I made the whole thing just return a list of zeros instead of actually using most of the inputs.
+
 def feedback_hankla(prograde_ns_locations, disk_surf_model, frac_Eddington_ratio, alpha):
     """_summary_
     This feedback model uses Eqn. 28 in Hankla, Jiang & Armitage (2020)
