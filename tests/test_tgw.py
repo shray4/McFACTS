@@ -3,8 +3,8 @@ import numpy as np
 import pytest
 
 from mcfacts.physics.binary.merge import tgw
-from mcfacts.utility import unit_test_variable_provider as provider
-from mcfacts.utility.unit_test_variable_provider import InputParameterSet
+import conftest as provider
+from conftest import InputParameterSet
 
 
 def param_normalize_tgw():

@@ -6,11 +6,11 @@ This module provides a central location for unit tests to retrieve variables and
 from enum import Enum
 
 import numpy as np
+import pytest
 import scipy
 from astropy import units as u
 
 TEST_SEED = 314159
-
 
 class InputParameterSet(Enum):
     """Input Parameter Set"""
@@ -193,7 +193,7 @@ INPUT_PARAMETER_UNITS = {
     "timestep_duration_yr": u.year
 }
 
-
+@pytest.fixture
 def get_binary_array(parameter_set):
     """Generate test binary array for a given parameter set
 
@@ -206,7 +206,7 @@ def get_binary_array(parameter_set):
 
     return []
 
-
+@pytest.fixture
 def get_surface_density_func(parameter_set: InputParameterSet):
     """Generate test surface density function for a given parameter set
 
@@ -224,5 +224,5 @@ def get_surface_density_func(parameter_set: InputParameterSet):
     return lambda x, f=surf_dens_func_log: np.exp(f(x))
 
 
-if __name__ == "__main__":
-    print(np.array(INPUT_PARAMETERS["timestep_duration_yr"]) * INPUT_PARAMETER_UNITS["timestep_duration_yr"])
+# if __name__ == "__main__":
+#     print(np.array(INPUT_PARAMETERS["timestep_duration_yr"]) * INPUT_PARAMETER_UNITS["timestep_duration_yr"])
