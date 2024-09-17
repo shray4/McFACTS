@@ -11,7 +11,7 @@ def param_normalize_tgw():
     """return input and expected values"""
     smbh_mass = provider.INPUT_PARAMETERS["smbh_mass"][InputParameterSet.BASE]
 
-    expected = [24404108.338690642, 244041083386.9064, 2440410833869065.0, 2.440410833869064e+19]
+    expected = [24404108.338690642, 244041083386.9064, 2440410833869065.0, 2.440410833869064e+19, 2.4404108338690643e+23, 19767327754339.426]
 
     return zip(smbh_mass, expected)
 
