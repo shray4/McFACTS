@@ -154,6 +154,14 @@ def arg():
         opts.seed = np.random.randint(low=0, high=int(1e9), dtype=np.int_)
         print(f'Random number generator seed set to: {opts.seed}')
 
+    # Check ISCO
+    if opts.inner_disk_outer_radius < opts.disk_inner_stable_circ_orb:
+        warnings.warn(
+            "Warning: inner_disk_outer_radius < disk_inner_stable_circ_orb;\n" +\
+            "Setting opts.inner_disk_outer_radius = disk_inner_stable_circ_orb"
+        )
+        opts.inner_disk_outer_radius = opts.disk_inner_stable_circ_orb
+
     # Write parameters to log file
     with open(opts.work_directory / opts.fname_log, 'w') as F:
         for item in opts.__dict__:
@@ -419,7 +427,7 @@ def main():
         num_bbh_gw_tracked = 0
 
         # Set up normalization for t_gw (SF: I do not like this way of handling, flag for update)
-        time_gw_normalization = tgw.normalize_tgw(opts.smbh_mass)
+        time_gw_normalization = tgw.normalize_tgw(opts.smbh_mass,opts.inner_disk_outer_radius)
         print("Scale of t_gw (yrs)=", time_gw_normalization)
 
         # Multiple AGN episodes:
@@ -1184,11 +1192,15 @@ def main():
             if (blackholes_inner_disk.num > 0):
                 # FIX THIS: Return the new evolved bh_orb_ecc_inner_disk as they decay inwards.
                 # Potentially move inner disk behaviour to module that is not dynamics (e.g inner disk module)
-                blackholes_inner_disk.orb_a = dynamics.bh_near_smbh(opts.smbh_mass,
-                                                                    blackholes_inner_disk.orb_a,
-                                                                    blackholes_inner_disk.mass,
-                                                                    blackholes_inner_disk.orb_ecc,
-                                                                    opts.timestep_duration_yr)
+                blackholes_inner_disk.orb_a = dynamics.bh_near_smbh(
+                    opts.smbh_mass,
+                    blackholes_inner_disk.orb_a,
+                    blackholes_inner_disk.mass,
+                    blackholes_inner_disk.orb_ecc,
+                    opts.timestep_duration_yr,
+                    opts.inner_disk_outer_radius,
+                    opts.disk_inner_stable_circ_orb,
+                )
 
                 # On 1st run through define old GW freqs (at say 9.e-7 Hz, since evolution change is 1e-6Hz)
                 if blackholes_emris.num == 0:
