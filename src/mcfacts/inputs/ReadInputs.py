@@ -489,7 +489,9 @@ def construct_disk_pAGN(
         pagn_name = 'Thompson'
         base_args = {
             'Mbh': smbh_mass*pagn_ct.MSun,
-            'm': disk_alpha_viscosity, 
+            'm': 0.2, 
+            'epsilon': 0.001,
+            'sigma': 300*1e3,
         }
             #'epsilon': rad_efficiency
             #'le': disk_bh_eddington_ratio,\
