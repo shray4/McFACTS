@@ -1,3 +1,7 @@
+"""
+Module for calculating the timescale of migrations.
+"""
+
 import numpy as np
 import scipy
 
@@ -30,11 +34,11 @@ def type1_migration(smbh_mass, disk_bh_orb_a_pro, disk_bh_mass_pro, disk_surf_de
         ratio of heating/migration torque. If ratio <1, migration inwards, but slows by factor tau_mig/(1-R)
         if ratio >1, migration outwards on timescale tau_mig/(R-1)
     disk_raduis_trap : float
-        radius of disk migration trap in units of gravitational radii (r_g=GM_smbh/c^2) 
+        radius of disk migration trap in units of gravitational radii (r_g=GM_smbh/c^2)
     disk_bh_orb_ecc_pro : float array
         orbital ecc of prograde singleton BH at start of timestep. Floor in orbital ecc given by e_crit
     disk_bh_pro_orb_ecc_crit : float
-        Critical value of orbital eccentricity below which we assume Type 1 migration must occur. Do not damp orb ecc below this (e_crit=0.01 is default)           
+        Critical value of orbital eccentricity below which we assume Type 1 migration must occur. Do not damp orb ecc below this (e_crit=0.01 is default)
     Returns
     -------
     bh_new_locations : float array
@@ -51,7 +55,7 @@ def type1_migration(smbh_mass, disk_bh_orb_a_pro, disk_bh_mass_pro, disk_surf_de
     else:
         disk_aspect_ratio = disk_aspect_ratio_func(disk_bh_orb_a_pro)
 
-    # Migration can only occur for sufficiently damped orbital ecc. If orb ecc <= e_crit, then migration. 
+    # Migration can only occur for sufficiently damped orbital ecc. If orb ecc <= e_crit, then migration.
     # Otherwise, no change in semi-major axis. Wait till orb ecc damped to <=e_crit.
     # Only show BH with orb ecc <=e_crit
     disk_bh_orb_ecc_pro = np.ma.masked_where(disk_bh_orb_ecc_pro > disk_bh_pro_orb_ecc_crit, disk_bh_orb_ecc_pro)
@@ -60,8 +64,8 @@ def type1_migration(smbh_mass, disk_bh_orb_a_pro, disk_bh_mass_pro, disk_surf_de
     #Indices of BH with <=critical ecc
     disk_bh_crit_ecc_pro_indices = np.ma.nonzero(disk_bh_orb_ecc_pro)
     #Indicies of BH with > critical ecc
-    disk_bh_crit_ecc_not_mig = np.ma.nonzero(disk_bh_not_mig)    
-    
+    disk_bh_crit_ecc_not_mig = np.ma.nonzero(disk_bh_not_mig)
+
     #Migration only if there are BH with e<=e_crit
     #if np.size(crit_ecc_prograde_indices) > 0:
     # compute migration timescale for each orbiter in seconds
@@ -78,10 +82,10 @@ def type1_migration(smbh_mass, disk_bh_orb_a_pro, disk_bh_mass_pro, disk_surf_de
     disk_bh_dist_mig = disk_bh_orb_a_pro * dt
     #Mask migration distance with zeros if orb ecc >= e_crit.
     disk_bh_dist_mig[disk_bh_crit_ecc_not_mig] = 0.
-     
+
     # Feedback provides a universal modification of migration distance
     # If feedback off, then feedback_ratio= ones and migration is unchanged
-    # Construct empty array same size as prograde_bh_locations 
+    # Construct empty array same size as prograde_bh_locations
 
     disk_bh_pro_a_new = np.zeros_like(disk_bh_orb_a_pro)
 
@@ -91,11 +95,11 @@ def type1_migration(smbh_mass, disk_bh_orb_a_pro, disk_bh_mass_pro, disk_surf_de
     disk_bh_mig_inward_all = disk_bh_orb_a_pro[disk_bh_mig_inward_mod]
 
     #Given a population migrating inwards
-    if disk_bh_mig_inward_mod.size > 0: 
+    if disk_bh_mig_inward_mod.size > 0:
         for i in range(0,disk_bh_mig_inward_mod.size):
                 # Among all inwards migrators, find location in disk & compare to trap radius
                 disk_bh_mig_inward_index = disk_bh_mig_inward_mod[i]
-                
+
                 #If outside trap, migrates inwards
                 if disk_bh_mig_inward_all[i] > disk_radius_trap:
                     disk_bh_pro_a_new[disk_bh_mig_inward_index] = disk_bh_orb_a_pro[disk_bh_mig_inward_index] - (disk_bh_dist_mig[disk_bh_mig_inward_index]*(1-disk_feedback_ratio_func[disk_bh_mig_inward_index]))
@@ -115,7 +119,7 @@ def type1_migration(smbh_mass, disk_bh_orb_a_pro, disk_bh_mass_pro, disk_surf_de
                 else:
                     raise RuntimeError("Forbidden case")
 
-    # Find indices of objects where feedback ratio >1; these migrate outwards. 
+    # Find indices of objects where feedback ratio >1; these migrate outwards.
     # In Sirko & Goodman (2003) disk model this is well outside migration trap region.
     disk_bh_mig_outward_mod = np.where(disk_feedback_ratio_func >1)[0]
 
@@ -130,7 +134,7 @@ def type1_migration(smbh_mass, disk_bh_orb_a_pro, disk_bh_mass_pro, disk_surf_de
     # If BH location > trap radius, migrate inwards
         for i in range(0,disk_bh_mig_unchanged.size):
             disk_bh_mig_unchanged_index = disk_bh_mig_unchanged[i]
-            if disk_bh_orb_a_pro[disk_bh_mig_unchanged_index] > disk_radius_trap:    
+            if disk_bh_orb_a_pro[disk_bh_mig_unchanged_index] > disk_radius_trap:
                 disk_bh_pro_a_new[disk_bh_mig_unchanged_index] = disk_bh_orb_a_pro[disk_bh_mig_unchanged_index] - disk_bh_dist_mig[disk_bh_mig_unchanged_index]
             # if new location is <= trap radius, set location to trap radius
                 if disk_bh_pro_a_new[disk_bh_mig_unchanged_index] <= disk_radius_trap:
@@ -149,8 +153,18 @@ def type1_migration(smbh_mass, disk_bh_orb_a_pro, disk_bh_mass_pro, disk_surf_de
     # Assert that things are not allowed to migrate out of the disk.
     mask_disk_radius_outer = disk_radius_outer < disk_bh_pro_a_new
     disk_bh_pro_a_new[mask_disk_radius_outer] = disk_radius_outer
-    assert np.sum(disk_bh_pro_a_new == 0) == 0, \
-        "disk_bh_pro_a_new was not set properly; a case was missed"
-    
-    return disk_bh_pro_a_new
+    if np.sum(disk_bh_pro_a_new == 0) > 0:
+        empty_mask = disk_bh_pro_a_new == 0
+        print("empty_mask:",np.where(empty_mask))
+        print("smbh_mass:",smbh_mass)
+        print("disk_radius_trap:",disk_radius_trap)
+        print("disk_radius_outer:",disk_radius_outer)
+        print("disk_bh_pro_orb_ecc_crit:",disk_bh_pro_orb_ecc_crit)
+        print("disk_bh_orb_ecc_pro:",disk_bh_orb_ecc_pro[empty_mask])
+        print("disk_bh_orb_a_pro:", disk_bh_orb_a_pro[empty_mask])
+        print("disk_bh_mass_pro:", disk_bh_mass_pro[empty_mask])
+        # Toss the binaries
+        disk_bh_pro_a_new[empty_mask] = 0.
+        raise RuntimeError("disk_bh_pro_a_new was not set properly; a case was missed")
 
+    return disk_bh_pro_a_new

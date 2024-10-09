@@ -1,26 +1,27 @@
-"""This module provides methods for calculating the orbital and binary eccentricities."""
+"""
+Module for calculating the orbital and binary eccentricity damping.
+"""
 
 import numpy as np
-from mcfacts.objects.agnobject import obj_to_binary_bh_array
 
 
 def orbital_ecc_damping(smbh_mass, disk_bh_pro_orbs_a, disk_bh_pro_orbs_masses, disk_surf_density_func,
                         disk_aspect_ratio_func, disk_bh_pro_orbs_ecc, timestep_duration_yr, disk_bh_pro_orb_ecc_crit):
     """This method returns an array of BH orbital eccentricities damped according to a prescription.
-    
-    Using Tanaka & Ward (2004)  t_damp = M^3/2 h^4 / (2^1/2 m Sigma a^1/2 G ) 
-    where M is the central mass, h is the disk aspect ratio (H/a), m is the orbiter mass, 
+
+    Using Tanaka & Ward (2004)  t_damp = M^3/2 h^4 / (2^1/2 m Sigma a^1/2 G )
+    where M is the central mass, h is the disk aspect ratio (H/a), m is the orbiter mass,
     Sigma is the disk surface density, a is the semi-major axis, G is the universal gravitational constant.
-     
-    From McKernan & Ford (2023) eqn 4. we can parameterize t_damp as 
+
+    From McKernan & Ford (2023) eqn 4. we can parameterize t_damp as
     t_damp ~ 0.1Myr (q/10^-7)^-1 (h/0.03)^4 (Sigma/10^5 kg m^-2)^-1 (a/10^4r_g)^-1/2
 
     Notes
     -----
-    For eccentricity e<2h 
+    For eccentricity e<2h
     e(t)=e0*exp(-t/t_damp)......(1)
-    
-    So 
+
+    So
     in 0.1 damping time, e(t_damp)=0.90*e0
     in 1 damping time,  e(t_damp)=0.37*e0
     in 2 damping times, e(t_damp)=0.135*e0
@@ -31,7 +32,7 @@ def orbital_ecc_damping(smbh_mass, disk_bh_pro_orbs_a, disk_bh_pro_orbs_masses, 
     For eccentricity e>2h eqn. 9 in McKernan & Ford (2023), based on Horn et al. (2012) the scaling time is now t_ecc.
     t_ecc = (t_damp/0.78)*[1 - (0.14*(e/h)^2) + (0.06*(e/h)^3)] ......(2)
     which in the limit of e>0.1 for most disk models becomes
-    t_ecc ~ (t_damp/0.78)*[1 + (0.06*(e/h)^3)] 
+    t_ecc ~ (t_damp/0.78)*[1 + (0.06*(e/h)^3)]
 
     Parameters
     ----------
@@ -48,12 +49,12 @@ def orbital_ecc_damping(smbh_mass, disk_bh_pro_orbs_a, disk_bh_pro_orbs_masses, 
         returns AGN gas disk aspect ratio given a distance from the SMBH in r_g
         can accept a simple float (constant), but this is deprecated
     disk_bh_pro_orbs_ecc : float array
-        orbital eccentricity of singleton BH     
+        orbital eccentricity of singleton BH
     timestep_duration_yr : float
         size of timestep in years
     disk_bh_pro_orb_ecc_crit: float
         critical eccentricity of prograde BH
-        
+
     Returns
     -------
     bh_new_orb_ecc : float array
@@ -145,7 +146,7 @@ def orbital_bin_ecc_damping(smbh_mass, blackholes_binary, disk_surf_density_func
     """"
     Return bin_array orbital eccentricities damped according to a prescription.
 
-    Use same mechanisms as for prograde singleton BH. 
+    Use same mechanisms as for prograde singleton BH.
 
     E.g. Tanaka & Ward (2004)  t_damp = M^3/2 h^4 / (2^1/2 m Sigma a^1/2 G )
     where M is the central mass, h is the disk aspect ratio (H/a), m is the orbiter mass,
@@ -155,7 +156,7 @@ def orbital_bin_ecc_damping(smbh_mass, blackholes_binary, disk_surf_density_func
 
     For eccentricity e<2h
         e(t)=e0*exp(-t/t_damp)......(1)
-        So 
+        So
         in 0.1 damping time, e(t_damp)=0.90*e0
         in 1 damping time,  e(t_damp)=0.37*e0
         in 2 damping times, e(t_damp)=0.135*e0
@@ -166,7 +167,7 @@ def orbital_bin_ecc_damping(smbh_mass, blackholes_binary, disk_surf_density_func
     For eccentricity e>2h eqn. 9 in McKernan & Ford (2023), based on Horn et al. (2012) the scaling time is now t_ecc.
         t_ecc = (t_damp/0.78)*[1 - (0.14*(e/h)^2) + (0.06*(e/h)^3)] ......(2)
         which in the limit of e>0.1 for most disk models becomes
-        t_ecc ~ (t_damp/0.78)*[1 + (0.06*(e/h)^3)] 
+        t_ecc ~ (t_damp/0.78)*[1 + (0.06*(e/h)^3)]
 
         Parameters
     ----------
@@ -179,7 +180,7 @@ def orbital_bin_ecc_damping(smbh_mass, blackholes_binary, disk_surf_density_func
         can accept a simple float (constant), but this is deprecated
     disk_aspect_ratio_func : function
         returns AGN gas disk aspect ratio given a distance from the SMBH in r_g
-        can accept a simple float (constant), but this is deprecated   
+        can accept a simple float (constant), but this is deprecated
     timestep_duration_yr : float
         size of timestep in years
 
@@ -268,9 +269,9 @@ def bin_ecc_damping(smbh_mass, disk_bh_pro_orbs_a, disk_bh_pro_orbs_masses, disk
         dot{m_bin} is ~0.05 M_bondi in these sims.
     with (from their eqn. 19)
         M_bondi/M_edd ~ 5e5 (R_H/H)^3  (rho/10^-14 g/cc) (M_smbh/10^6M_sun)^-1/2 (R0/0.1pc)^3/2 (e/0.1)
-        where R_H=Hill sphere radius, H = disk scale height, rho = disk midplane density, 
+        where R_H=Hill sphere radius, H = disk scale height, rho = disk midplane density,
         R0=location of binary, e=acc. efficiency onto SMBH (L=e*dot{M}c^2)
-    Convert to 10^8Msun, *1/10    
+    Convert to 10^8Msun, *1/10
 
     Use Tanaka & Ward (2004)  t_damp = M^3/2 h^4 / (2^1/2 m Sigma a^1/2 G )
     where M is the central mass, h is the disk aspect ratio (H/a), m is the orbiter mass,
@@ -281,7 +282,7 @@ def bin_ecc_damping(smbh_mass, disk_bh_pro_orbs_a, disk_bh_pro_orbs_masses, disk
 
     For eccentricity e<2h
         e(t)=e0*exp(-t/t_damp)......(1)
-        So 
+        So
             in 0.1 damping time, e(t_damp)=0.90*e0
             in 1 damping time,  e(t_damp)=0.37*e0
             in 2 damping times, e(t_damp)=0.135*e0
@@ -292,7 +293,7 @@ def bin_ecc_damping(smbh_mass, disk_bh_pro_orbs_a, disk_bh_pro_orbs_masses, disk
     For eccentricity e>2h eqn. 9 in McKernan & Ford (2023), based on Horn et al. (2012) the scaling time is now t_ecc.
         t_ecc = (t_damp/0.78)*[1 - (0.14*(e/h)^2) + (0.06*(e/h)^3)] ......(2)
         which in the limit of e>0.1 for most disk models becomes
-        t_ecc ~ (t_damp/0.78)*[1 + (0.06*(e/h)^3)] 
+        t_ecc ~ (t_damp/0.78)*[1 + (0.06*(e/h)^3)]
 
     Parameters
     ----------
@@ -309,10 +310,10 @@ def bin_ecc_damping(smbh_mass, disk_bh_pro_orbs_a, disk_bh_pro_orbs_masses, disk
         returns AGN gas disk aspect ratio given a distance from the SMBH in r_g
         can accept a simple float (constant), but this is deprecated
     disk_bh_pro_orbs_ecc : float array
-        orbital eccentricity of singleton BH     
+        orbital eccentricity of singleton BH
     timestep_duration_yr : float
         size of timestep in years
-        
+
     Returns
     -------
     bh_new_orb_ecc : float array

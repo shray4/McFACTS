@@ -1,26 +1,20 @@
-import numpy as np
-import scipy
-
-from astropy import constants as astropy_constants
-from astropy import units as astropy_units
-
-from mcfacts.mcfacts_random_state import rng
-import mcfacts.constants as mc_const
-from mcfacts.objects.agnobject import obj_to_binary_bh_array
-from mcfacts.physics.dynamics.point_masses import time_of_orbital_shrinkage
-from mcfacts.physics.dynamics.point_masses import orbital_separation_evolve
-from mcfacts.physics.dynamics.point_masses import orbital_separation_evolve_reverse
-from mcfacts.physics.dynamics.point_masses import time_of_orbital_shrinkage
-from mcfacts.physics.dynamics.point_masses import si_from_r_g, r_g_from_units
-
-
-"""Module for handling dynamical interactions
+"""Module for handling dynamical interactions.
 
 Contains multiple functions which are each mocked up versions of a
 dynamical mechanism. Of varying fidelity to reality. Also contains
 GW orbital evolution for BH in the inner disk, which should probably
 move elsewhere.
 """
+import numpy as np
+import scipy
+
+from astropy import units as astropy_units
+
+from mcfacts.mcfacts_random_state import rng
+import mcfacts.constants as mc_const
+from mcfacts.objects.agnobject import obj_to_binary_bh_array
+from mcfacts.physics.point_masses import time_of_orbital_shrinkage
+from mcfacts.physics.point_masses import si_from_r_g
 
 def circular_singles_encounters_prograde(
         smbh_mass,

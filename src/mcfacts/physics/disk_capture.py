@@ -1,17 +1,115 @@
 """
-Retrograde Evolution
-===========
-
-This module provides a functions for evolving retrograde orbiters.
+Module for computing disk-orbiter interactions, which may lead to capture.
 """
 import numpy as np
 import scipy
-import mcfacts.constants as mc_const
+
+from mcfacts import constants as mc_const
 
 
-def crude_retro_bh(smbh_mass, disk_bh_retro_masses, disk_bh_retro_orbs_a, disk_bh_retro_orbs_ecc,
-                   disk_bh_retro_orbs_inc, disk_bh_retro_arg_periapse, disk_surf_density_func, timestep_duration_yr):
-    """To avoid having to install and couple to SpaceHub, and run N-body code
+def orb_inc_damping(smbh_mass, disk_bh_retro_orbs_a, disk_bh_retro_masses, disk_bh_retro_orbs_ecc,
+                    disk_bh_retro_orbs_inc, disk_bh_retro_arg_periapse, timestep_duration_yr, disk_surf_density_func):
+    """Calculates how fast the inclination angle of an arbitrary single orbiter changes due to dynamical friction.
+
+    Appropriate for BH, NS, maaaybe WD?--check using Wang, Zhu & Lin 2024, MNRAS, 528, 4958 (WZL).
+
+    Notes
+    -----
+
+    It returns the new locations of the retrograde
+    orbiters after 1 timestep_duration_yr. Note we have assumed the masses of the orbiters are
+    negligible compared to the SMBH (<1% should be fine).
+
+    Unlike all the other orbital variables (semi-major axis, ecc, semi-latus rectum)
+    the timescale won't necessarily do anything super horrible for inc = pi, since it only
+    depends on the inclination angle itself, sin(inc)... however, it could do something
+    horrible at inc=pi for some values of omega; and it WILL go to zero at inc=0, which
+    could easily cause problems...
+
+    Also, I think this function will still work fine if you feed it prograde bh
+    just change the variable name in the function call... (this is not true for migration)
+    Testing implies that inc=0 or pi is actually ok, at least for omega=0 or pi
+
+    Parameters
+    ----------
+    smbh_mass : float
+        mass of supermassive black hole in units of solar masses
+    disk_bh_retro_orbs_a : float array
+        locations of retrograde singleton BH at start of a timestep in units of gravitational radii (r_g=GM_SMBH/c^2)
+        (actually we assume this is the same as the semi-major axis)
+    disk_bh_retro_masses : float array
+        masses of retrograde singleton BH at start of a timestep in units of solar masses
+    disk_bh_retro_orbs_ecc : float array
+        orbital eccentricities of retrograde singleton BH at start of a timestep.
+    disk_bh_retro_orbs_inc : float array
+        orbital inclinations of retrograde singleton BH at start of a timestep.
+    disk_bh_retro_arg_periapse : float array
+        argument of periapse of retrograde singleton BH at start of a timestep.
+    timestep_duration_yr : float
+        size of a timestep in years
+    disk_surf_density_func : function
+        method provides the AGN gas disk surface density in kg/m^2 given a distance from the SMBH in r_g
+
+    Returns
+    -------
+    disk_bh_retro_orbs_ecc_new : float array
+        orbital inclinations of retrograde singletons BH at end of a timestep.
+    """
+
+    # throw most things into SI units (that's right, ENGINEER UNITS!)
+    #    or more locally convenient variable names
+    smbh_mass = smbh_mass * mc_const.mass_per_msun  # kg
+    semi_maj_axis = disk_bh_retro_orbs_a * scipy.constants.G * smbh_mass \
+                    / (scipy.constants.c) ** 2  # m
+    retro_mass = disk_bh_retro_masses * mc_const.mass_per_msun  # kg
+    omega = disk_bh_retro_arg_periapse  # radians
+    ecc = disk_bh_retro_orbs_ecc  # unitless
+    inc = disk_bh_retro_orbs_inc  # radians
+    timestep_duration_yr = timestep_duration_yr * scipy.constants.Julian_year  # sec
+
+    # period in units of sec
+    period = 2.0 * np.pi * np.sqrt(semi_maj_axis ** 3 / (scipy.constants.G * smbh_mass))
+    # semi-latus rectum in units of meters
+    semi_lat_rec = semi_maj_axis * (1.0 - ecc ** 2)
+    # WZL Eqn 7 (sigma+/-)
+    sigma_plus = np.sqrt(1.0 + ecc ** 2 + 2.0 * ecc * np.cos(omega))
+    sigma_minus = np.sqrt(1.0 + ecc ** 2 - 2.0 * ecc * np.cos(omega))
+    # WZL Eqn 8 (eta+/-)
+    eta_plus = np.sqrt(1.0 + ecc * np.cos(omega))
+    eta_minus = np.sqrt(1.0 - ecc * np.cos(omega))
+    # WZL Eqn 62
+    kappa = 0.5 * (np.sqrt(1.0 / eta_plus ** 15) + np.sqrt(1.0 / eta_minus ** 15))
+    # WZL Eqn 30
+    delta = 0.5 * (sigma_plus / eta_plus ** 2 + sigma_minus / eta_minus ** 2)
+    # WZL Eqn 71
+    #   NOTE: preserved disk_bh_retro_orbs_a in r_g to feed to disk_surf_density_func function
+    #   tau in units of sec
+    tau_i_dyn = np.sqrt(2.0) * inc * (delta - np.cos(inc)) ** 1.5 \
+                * smbh_mass ** 2 * period / (
+                            retro_mass * disk_surf_density_func(disk_bh_retro_orbs_a) * np.pi * semi_lat_rec ** 2) \
+                / kappa
+
+    # assume the fractional change in inclination is the fraction
+    #   of tau_i_dyn represented by one timestep_duration_yr
+    frac_change = timestep_duration_yr / tau_i_dyn
+
+    # if the timescale for change of inclination is larger than the timestep_duration_yr
+    #    send the new inclination to zero
+    frac_change[frac_change > 1.0] = 1.0
+
+    disk_bh_retro_orbs_ecc_new = inc * (1.0 - frac_change)
+
+    return disk_bh_retro_orbs_ecc_new
+
+
+
+def retro_bh_orb_disk_evolve(smbh_mass, disk_bh_retro_masses, disk_bh_retro_orbs_a, disk_bh_retro_orbs_ecc,
+                             disk_bh_retro_orbs_inc, disk_bh_retro_arg_periapse, disk_surf_density_func, timestep_duration_yr):
+    """Evolve the orbit of initially-embedded retrograde black hole orbiters due to disk interactions.
+
+    This is a CRUDE version of evolution, future upgrades may couple to SpaceHub.
+
+    To avoid having to install and couple to SpaceHub, and run N-body code
     this is a distinctly half-assed treatment of retrograde orbiters, based
     LOOSELY on Wang, Zhu & Lin 2024 (WZL). Evolving all orbital params simultaneously.
     Using lots of if statements to pretend we're interpolating.
@@ -113,7 +211,7 @@ def crude_retro_bh(smbh_mass, disk_bh_retro_masses, disk_bh_retro_orbs_a, disk_b
     #   scaling from fig 8 WZL comparing cos(w)=0 to cos(w)=+/-1
     #       tau_semimaj~1/100, tau_ecc~1/1000, tau_inc~1/5000
     #       at high inc, large ecc
-    #       
+    #
     #      Estimating for smbh_mass=1e8Msun, orbiter_mass=30Msun, SG disk surf dens
     #       in 1.5e7yrs a=100rg->60rg, e=0.7->0.5, i=175->170deg
     stepw0_time = 1.5e7  #years
@@ -250,8 +348,22 @@ def crude_retro_bh(smbh_mass, disk_bh_retro_masses, disk_bh_retro_orbs_a, disk_b
         else:
             print("Warning: retrograde argument of periapse out of range, behavior unreliable")
     # Check Finite
-    assert np.isfinite(disk_bh_retro_orbs_ecc_new).all(), \
-        "Finite check failed for disk_bh_retro_orbs_ecc_new"
+    nan_mask = (
+        ~np.isfinite(disk_bh_retro_orbs_ecc_new) | \
+        ~np.isfinite(disk_bh_retro_orbs_a_new) | \
+        ~np.isfinite(disk_bh_retro_orbs_inc_new) \
+    )
+    if np.sum(nan_mask) > 0:
+        print("nan_mask:",np.where(nan_mask))
+        print("nan old ecc:",disk_bh_retro_orbs_ecc[nan_mask])
+        print("disk_bh_retro_masses:", disk_bh_retro_masses[nan_mask])
+        print("disk_bh_retro_orbs_a:", disk_bh_retro_orbs_a[nan_mask])
+        print("disk_bh_retro_orbs_inc:",disk_bh_retro_orbs_inc[nan_mask])
+        print("disk_bh_retro_arg_periapse:",disk_bh_retro_arg_periapse[nan_mask])
+        disk_bh_retro_orbs_ecc_new[nan_mask] = 2.
+        disk_bh_retro_orbs_a_new[nan_mask] = 0.
+        disk_bh_retro_orbs_inc_new[nan_mask] = 0.
+        raise RuntimeError("Finite check failed for disk_bh_retro_orbs_ecc_new")
     # Check Finite
     assert np.isfinite(disk_bh_retro_orbs_a_new).all(), \
         "Finite check failed for disk_bh_retro_orbs_a_new"
@@ -264,7 +376,7 @@ def crude_retro_bh(smbh_mass, disk_bh_retro_masses, disk_bh_retro_orbs_a, disk_b
 
 def tau_inc_dyn(smbh_mass, disk_bh_retro_orbs_a, disk_bh_retro_masses, disk_bh_retro_arg_periapse,
                 disk_bh_retro_orbs_ecc, disk_bh_retro_orbs_inc, disk_surf_density_func):
-    """Computes inclination damping timescale from actual variables; used only for scaling
+    """Computes inclination damping timescale from actual variables; used only for scaling.
 
 
     Parameters
@@ -330,12 +442,12 @@ def tau_semi_lat(smbh_mass, retrograde_bh_locations, retrograde_bh_masses, retro
     """This function calculates how fast the semi-latus rectum of a retrograde single orbiter
     changes due to dynamical friction (appropriate for BH, NS, maaaybe WD?--check) using
     Wang, Zhu & Lin 2024, MNRAS, 528, 4958 (WZL). It returns the timescale for the retrograde
-    orbiters to change their semi-latus rectum (eqn 70). Note we have assumed the masses of 
+    orbiters to change their semi-latus rectum (eqn 70). Note we have assumed the masses of
     the orbiters are negligible compared to the SMBH (<1% should be fine).
 
     Funny story: if inc = pi exactly, the semi-latus rectum decay is stupid fast
     due to the sin(inc) in tau_p_dyn. However, if you're just a bit
-    away from inc = pi (say, pi - 1e-6--but haven't done thorough param search) 
+    away from inc = pi (say, pi - 1e-6--but haven't done thorough param search)
     you get something like sensible answers.
     So we gotta watch out for this
 
@@ -403,8 +515,8 @@ def tau_semi_lat(smbh_mass, retrograde_bh_locations, retrograde_bh_masses, retro
 
 def tau_ecc_dyn(smbh_mass, disk_bh_retro_orbs_a, disk_bh_retro_masses, disk_bh_retro_arg_periapse,
                 disk_bh_retro_orbs_ecc, disk_bh_retro_orbs_inc, disk_surf_density_func):
-    """computes eccentricity & semi-maj axis damping timescale from actual variables
-    not including migration; used only for scaling
+    """Computes eccentricity & semi-maj axis damping timescale from actual variables
+    not including migration; used only for scaling.
 
     Parameters
     ----------

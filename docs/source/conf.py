@@ -56,7 +56,13 @@ intersphinx_mapping = {'python': ('https://docs.python.org/3', None),
 templates_path = ['_templates']
 exclude_patterns = []
 
+# -- Options for auto summary
+
+autoclass_content = 'both'
 autosummary_generate = True
+autosummary_generate_overwrite = True
+autodoc_docstring_signature = True
+autosummary_mock_imports = ['pagn']
 
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
