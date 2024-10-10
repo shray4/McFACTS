@@ -2,25 +2,10 @@ import numpy as np
 from copy import deepcopy
 from mcfacts.setup import setupdiskstars, setupdiskblackholes
 
-"""
-def check_1d_length(arr_list):
-    if(len({arr.shape for arr in arr_list}) > 1):
-        raise ValueError('Arrays are not all 1d.')
 
-    if( len(set(map(len,arr_list))) != 1):
-        raise ValueError('Arrays are not all the same length.')
- """
-
-# TODO: similar vein: print method? Same thing maybe?
-# TODO: custom error messages when you don't supply all the fields for init and add methods
-# TODO: custom error messages when input arrays to init and add methods aren't the same length
 # TODO: dump_record_array writes every value as a float. Make dictionary with all attributes and datatypes? Or is a float fine?
 # TODO: init_from_file: you have to initialize an empty AGNObject before you can init_from_file and that seems weird.
 #       check if this is now just an AGNObject because we would want it to be an AGNStar or AGNBlackHole etc
-# TODO: error if you try to pass kwarg that doesnt exist. AttributeError?
-# TODO: issue: right now you can pass AGNStar arrays that are 8-elements long for the star parameters and 10-elements long 
-#       for the AGNObject parameters and it doesn't complain.
-
 # Empty array to pass
 empty_arr = np.array([])
 
@@ -97,23 +82,23 @@ def obj_to_binary_bh_array(obj):
         the same data formatted in the binary_bh_array style
     """
 
-    data = (obj.orb_a_1, obj.orb_a_2,  # 0, 1
-            obj.mass_1, obj.mass_2,  # 2, 3
-            obj.spin_1, obj.spin_2,  # 4, 5
-            obj.spin_angle_1, obj.spin_angle_2,  # 6, 7
-            obj.bin_sep,  # 8
-            obj.bin_orb_a,  # 9
-            obj.time_to_merger_gw,  # 10
-            obj.flag_merging,  # 11
-            obj.time_merged,  # 12
-            obj.bin_ecc,  # 13
-            obj.gen_1, obj.gen_2,  # 14, 15
-            obj.bin_orb_ang_mom,  # 16
-            obj.bin_orb_inc,  # 17
-            obj.bin_orb_ecc,  # 18
-            obj.gw_freq,  # 19
-            obj.gw_strain,  # 20
-            obj.id_num)  # 21
+    data = (obj.orb_a_1, obj.orb_a_2,  # 0, 1  distance from SMBH in r_g
+            obj.mass_1, obj.mass_2,  # 2, 3  mass in Msun
+            obj.spin_1, obj.spin_2,  # 4, 5  dimensionless spin magnitude
+            obj.spin_angle_1, obj.spin_angle_2,  # 6, 7  spin angle wrt disk gas in radians
+            obj.bin_sep,  # 8  separation of binary components in r_g (semi-major axis around binary CoM)
+            obj.bin_orb_a,  # 9  binary's distance from SMBH in r_g
+            obj.time_to_merger_gw,  # 10  time to merger through GW alone
+            obj.flag_merging,  # 11  merger flag, -2 if merging this timestep, else 0
+            obj.time_merged,  # 12  time of merger if binary has already merged
+            obj.bin_ecc,  # 13  binary eccentricity around binary CoM
+            obj.gen_1, obj.gen_2,  # 14, 15  generations
+            obj.bin_orb_ang_mom,  # 16  binary orbital angular momentum (+1 prograde, -1 retrograde)
+            obj.bin_orb_inc,  # 17  binary orbital inclination
+            obj.bin_orb_ecc,  # 18  binary orbital eccentricity of CoM around SMBH
+            obj.gw_freq,  # 19  GW frequency in Hz
+            obj.gw_strain,  # 20  GW dimensionless strain of binary
+            obj.id_num)  # 21  ID number
 
     binary_bh_array = np.vstack(data)
 
@@ -513,17 +498,17 @@ class AGNObject(object):
 
         assert fname is not None, "Need to pass filename"
 
-        header = " ".join(cols)
-
-        if extra_header is not None:
-            header = extra_header + header
-
         self.check_consistency()
 
         if cols is not None:
             attributes = cols
         else:
             attributes = get_attr_list(self)
+
+        header = " ".join(attributes)
+
+        if extra_header is not None:
+            header = extra_header + header
 
         attrs_list = []
         for attr in attributes:

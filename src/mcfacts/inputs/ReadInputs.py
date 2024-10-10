@@ -6,6 +6,8 @@ Inifile
         'sirko_goodman' or 'thompson_etal'
     "flag_use_pagn"                 : bool
         Use pAGN to generate disk model?
+    "flag_add_stars"                : bool
+        Add stars to the disk
     "smbh_mass"                     : float
         Mass of the supermassive black hole (solMass)
     "disk_radius_trap"              : float
@@ -139,6 +141,7 @@ from astropy import constants as ct
 INPUT_TYPES = {
     "disk_model_name"               : str,
     "flag_use_pagn"                 : bool,
+    "flag_add_stars"                : bool,
     "smbh_mass"                     : float,
     "disk_radius_trap"              : float,
     "disk_radius_outer"             : float,

@@ -26,10 +26,11 @@ MSTAR_RUNS_EXE = ${HERE}/scripts/vera_mstar_bins.py
 MSTAR_PLOT_EXE = ${HERE}/src/mcfacts/outputs/plot_mcfacts_handler_quantities.py
 
 #### Setup ####
-SEED=3456789012
+SEED=3456789108
 #FNAME_INI= ${HERE}/recipes/p1_thompson.ini
 FNAME_INI= ${HERE}/recipes/model_choice_old.ini
-MSTAR_RUNS_WKDIR = ${HERE}/runs_mstar_bins
+FNAME_INI_MSTAR= ${HERE}/recipes/p3_pAGN_on.ini
+MSTAR_RUNS_WKDIR = ${HERE}/runs_mstar_bins_pAGN
 # NAL files might not exist unless you download them from
 # https://gitlab.com/xevra/nal-data
 # scripts that use NAL files might not work unless you install
@@ -61,6 +62,18 @@ unit_test: clean version
 	conda activate mcfacts-dev && \
 	pytest
 
+DIST=dist/mcfacts-${VERSION}.tar.gz
+build-install: clean version
+	python3 -m build
+	python3 -m pip install $(DIST)
+
+test-build: build-install
+	mkdir test-build
+	cp ${DIST} test-build
+	cp ${MCFACTS_SIM_EXE} test-build
+	cd test-build; pip install ${notdir ${DIST}}
+	cd test-build; python3 ${notdir ${MCFACTS_SIM_EXE}}
+
 #### Test one thing at a time ####
 
 # do not put linebreaks between any of these lines. Your run will call a different .ini file
@@ -68,13 +81,17 @@ mcfacts_sim: clean
 	mkdir -p runs
 	cd runs; \
 		python ../${MCFACTS_SIM_EXE} \
-		--galaxy_num 10 \
+		--galaxy_num 100 \
 		--fname-ini ../${FNAME_INI} \
 		--fname-log out.log \
 		--seed ${SEED}
 
 
 plots: mcfacts_sim
+	cd runs; \
+	python ../${POPULATION_PLOTS_EXE} --fname-mergers ${wd}/output_mergers_population.dat --plots-directory ${wd}
+
+just_plots:
 	cd runs; \
 	python ../${POPULATION_PLOTS_EXE} --fname-mergers ${wd}/output_mergers_population.dat --plots-directory ${wd}
 
@@ -85,7 +102,7 @@ vera_plots: mcfacts_sim
 
 mstar_runs:
 	python ${MSTAR_RUNS_EXE} \
-		--fname-ini recipes/p3_pAGN_off.ini \
+		--fname-ini ${FNAME_INI_MSTAR} \
 		--timestep_num 1000 \
 		--bin_num_max 10000 \
 		--nbins 33 \
@@ -94,7 +111,8 @@ mstar_runs:
 		--mstar-max 1e13 \
 		--scrub \
 		--fname-nal ${FNAME_GWTC2_NAL} \
-		--wkdir ${MSTAR_RUNS_WKDIR}
+		--wkdir ${MSTAR_RUNS_WKDIR} \
+		--truncate-opacity
 		#--nbins 33 
 		#--timestep_num 1000 \
 	#python3 ${MSTAR_PLOT_EXE} --run-directory ${MSTAR_RUNS_WKDIR}
@@ -120,6 +138,8 @@ clean:
 	rm -rf ${wd}/mergers_cdf*.png
 	rm -rf ${wd}/mergers_nal*.png
 	rm -rf ${wd}/r_chi_p.png
+	rm -rf ${wd}/dist
+	rm -rf ${wd}/test-build
 
 clean_win:
 	for /d %%i in (.\run*) do rd /s /q "%%i"
