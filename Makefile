@@ -11,7 +11,7 @@ tests: mcfacts_sim
 # Alpha begins at 0.1.0
 # Feature-complete Alpha begins at 0.2.0
 # Beta begins at 0.3.0
-VERSION=0.0.0
+VERSION=0.1.0
 
 ### Should work for everyone ###
 # Current directory
@@ -53,7 +53,7 @@ setup: clean version
 	source ~/.bash_profile && \
 	conda activate base && \
 	conda remove -n mcfacts-dev --all -y && \
-	conda create --name mcfacts-dev "python>=3.10.4" pip "pytest" -c conda-forge -c defaults -y && \
+	conda create --name mcfacts-dev "python>=3.10.4<=3.13" pip "pytest" -c conda-forge -c defaults -y && \
 	conda activate mcfacts-dev && \
 	python -m pip install --editable .
 
