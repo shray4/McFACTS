@@ -1,0 +1,42 @@
+name: Run Test
+
+on:
+  push:
+    branches:
+      - main-dev
+  pull_request:
+    branches:
+      - main-dev
+
+jobs:
+  run-test:
+    name: ($)
+    runs-on: $
+
+    strategy:
+      fail-fast: false
+      matrix:
+        os: ["ubuntu-latest", "macos-latest"]
+
+    steps:
+      - name: Check out the code
+        uses: actions/checkout@v3
+
+      - name: Set up Conda
+        uses: conda-incubator/setup-miniconda@v2
+        with:
+          python-version: 3.12
+          miniconda-version: 'latest'
+          channels: conda-forge
+          auto-update-conda: false
+          auto-activate-base: false
+          activate-environment: mcfacts-dev
+
+      - name: Install dependencies and McFACTS
+        run: |
+          conda install pytest
+          python -m pip install --editable .
+
+      - name: Run Pytest
+        run: |
+          pytest
