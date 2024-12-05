@@ -53,7 +53,7 @@ setup: clean version
 	source ~/.bash_profile && \
 	conda activate base && \
 	conda remove -n mcfacts-dev --all -y && \
-	conda create --name mcfacts-dev "python>=3.10.4<=3.13" pip "pytest" -c conda-forge -c defaults -y && \
+	conda create --name mcfacts-dev "python=3.12.0" pip "pytest" -c conda-forge -c defaults -y && \
 	conda activate mcfacts-dev && \
 	python -m pip install --editable .
 
@@ -81,7 +81,7 @@ mcfacts_sim: clean
 	mkdir -p runs
 	cd runs; \
 		python ../${MCFACTS_SIM_EXE} \
-		--galaxy_num 100 \
+		--galaxy_num 10 \
 		--fname-ini ../${FNAME_INI} \
 		--fname-log out.log \
 		--seed ${SEED}
