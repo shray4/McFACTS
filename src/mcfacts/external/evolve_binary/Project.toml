@@ -1,0 +1,4 @@
+[deps]
+CondaPkg = "992eb4ea-22a4-4c89-a5bb-47a3300528ab"
+PostNewtonian = "377afc40-5642-4616-8613-b7ebca523866"
+PythonCall = "6099a3de-0909-46bc-b1f4-468b9a2dfc0d"
