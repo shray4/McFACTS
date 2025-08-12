@@ -63,11 +63,14 @@ def feedback_bh_hankla(disk_bh_pro_orbs_a, disk_surf_density_func, disk_opacity_
     #Define kappa (or set up a function to call).
     disk_opacity = disk_opacity_func(disk_bh_pro_orbs_a)
 
-    ratio_feedback_migration_torque = 0.07 * (1/disk_opacity) * (disk_alpha_viscosity)**(-1.5) * \
+    ratio_feedback_migration_torque = 0.07 * (1/disk_opacity) * (disk_alpha_viscosity ** -1.5) * \
                                       disk_bh_eddington_ratio * np.sqrt(disk_bh_pro_orbs_a) / disk_surface_density
 
-    # set ratio = 1 (no migration) for black holes beyond the disk outer radius
-    ratio_feedback_migration_torque[np.where(disk_bh_pro_orbs_a > disk_radius_outer)] = 1
+    # set ratio = 1 (no migration) for black holes at or beyond the disk outer radius
+    ratio_feedback_migration_torque[np.where(disk_bh_pro_orbs_a >= disk_radius_outer)] = 1.
+
+    assert np.isfinite(ratio_feedback_migration_torque).all(), \
+        "Finite check failure: ratio_feedback_migration_torque"
 
     return ratio_feedback_migration_torque
 
@@ -135,10 +138,13 @@ def feedback_stars_hankla(disk_stars_pro_orbs_a, disk_surf_density_func, disk_op
     #Define kappa (or set up a function to call).
     disk_opacity = disk_opacity_func(disk_stars_pro_orbs_a)
 
-    ratio_feedback_migration_torque = 0.07 * (1/disk_opacity) * (disk_alpha_viscosity)**(-1.5) * \
+    ratio_feedback_migration_torque = 0.07 * (1/disk_opacity) * (disk_alpha_viscosity ** -1.5) * \
                                       disk_stars_eddington_ratio * np.sqrt(disk_stars_pro_orbs_a) / disk_surface_density
 
     # set ratio = 1 (no migration) for stars beyond the disk outer radius
     ratio_feedback_migration_torque[np.where(disk_stars_pro_orbs_a > disk_radius_outer)] = 1
+    
+    assert np.isfinite(ratio_feedback_migration_torque).all(), \
+        "Finite check failure: ratio_feedback_migration_torque"
 
     return ratio_feedback_migration_torque

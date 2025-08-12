@@ -1,7 +1,7 @@
 """ The module provides methods for calculating the eccentricity and semi major latus of retrograde orbiters."""
 import numpy as np
-import scipy
-import mcfacts.constants as mc_const
+import astropy.constants as const
+import astropy.units as u
 
 
 def retro_semi_lat(smbh_mass, disk_bh_retro_orbs_a, disk_bh_retro_masses, disk_bh_retro_orbs_ecc,
@@ -45,15 +45,15 @@ def retro_semi_lat(smbh_mass, disk_bh_retro_orbs_a, disk_bh_retro_masses, disk_b
 
     # throw most things into SI units (that's right, ENGINEER UNITS!)
     #    or more locally convenient variable names
-    smbh_mass = smbh_mass * mc_const.KgPerMsun  # kg
-    semi_maj_axis = disk_bh_retro_orbs_a * scipy.constants.G * smbh_mass / (scipy.constants.c) ** 2  # m
-    retro_mass = disk_bh_retro_masses * mc_const.KgPerMsun  # kg
+    smbh_mass = smbh_mass * u.Msun.to("kg")  # kg
+    semi_maj_axis = disk_bh_retro_orbs_a * const.G * smbh_mass / (const.c) ** 2  # m
+    retro_mass = disk_bh_retro_masses * u.Msun.to("kg")  # kg
     omega = disk_bh_retro_arg_periapse  # radians
     ecc = disk_bh_retro_orbs_ecc  # unitless
     inc = disk_bh_retro_orbs_inc  # radians
 
     # period in units of sec
-    period = 2.0 * np.pi * np.sqrt(semi_maj_axis ** 3 / (scipy.constants.G * smbh_mass))
+    period = 2.0 * np.pi * np.sqrt(semi_maj_axis ** 3 / (const.G * smbh_mass))
     # semi-latus rectum in units of meters
     semi_lat_rec = semi_maj_axis * (1.0 - ecc ** 2)
     # WZL Eqn 7 (sigma+/-)
@@ -136,7 +136,7 @@ def retro_ecc(smbh_mass, disk_bh_retro_orbs_a, disk_bh_retro_masses, disk_bh_ret
     omega = disk_bh_retro_arg_periapse  # radians
     ecc = disk_bh_retro_orbs_ecc  # unitless
     inc = disk_bh_retro_orbs_inc  # radians
-    disk_surf_density_func = disk_surf_density_func * scipy.constants.Julian_year  # sec
+    disk_surf_density_func = disk_surf_density_func * (1 * u.yr).to(u.s)  # sec
 
     # WZL Eqn 7 (sigma+/-)
     sigma_plus = np.sqrt(1.0 + ecc ** 2 + 2.0 * ecc * np.cos(omega))
@@ -164,7 +164,7 @@ def retro_ecc(smbh_mass, disk_bh_retro_orbs_a, disk_bh_retro_masses, disk_bh_ret
     #   fortunately it's a few factors off of tau_p_dyn (this may be a dumb way to handle it)
     tau_a_dyn = tau_p_dyn * (1.0 - ecc ** 2) * kappa * np.abs(np.cos(inc) - zeta) / (
                 kappa_bar * np.abs(np.cos(inc) - zeta_bar))
-    
+
     # WZL Eqn 73
     tau_e_dyn = (2.0 * ecc ** 2 / (1.0 - ecc ** 2)) * 1.0 / np.abs(1.0 / tau_a_dyn - 1.0 / tau_p_dyn)
 
@@ -181,11 +181,11 @@ def retro_ecc(smbh_mass, disk_bh_retro_orbs_a, disk_bh_retro_masses, disk_bh_ret
     # need to figure out which way the eccentricity is going; use
     #   Eqn 69 in WZL for cosine of critical inclination
     cos_inc_crit = (xi_bar - (1.0 - ecc ** 2) * xi) / (kappa_bar - (1.0 - ecc ** 2) * kappa)
-    print("cos_inc_crit")
-    print(cos_inc_crit)
+    # print("cos_inc_crit")
+    # print(cos_inc_crit)
     inc_crit = np.arccos(cos_inc_crit)
-    print("inc_crit")
-    print(inc_crit)
+    # print("inc_crit")
+    # print(inc_crit)
     # if the inc < inc_crit, ecc is excited, else it is damped
     # WZL has a fucking typo: should be inc<inc_crit, not cos(inc)<cos(inc_crit)!!!
     frac_change[inc > inc_crit] = -frac_change[inc > inc_crit]
