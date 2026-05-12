@@ -6,6 +6,7 @@ import numpy as np
 import scipy
 import astropy.constants as const
 import astropy.units as u
+from mcfast import baruteau_helper
 
 
 def change_bin_mass(binary_mass_1, binary_mass_2, binary_flag_merging, disk_bh_eddington_ratio,
@@ -147,6 +148,7 @@ def change_bin_spin_angles(bin_spin_angle_1, bin_spin_angle_2, binary_flag_mergi
     blackholes_binary : AGNBinaryBlackHole
         Binary black holes with updated spin angles after subtracting angle at prescribed rate for one timestep
     """
+    
     disk_bh_eddington_ratio_normalized = disk_bh_eddington_ratio/1.0  # does nothing?
     timestep_duration_yr_normalized = timestep_duration_yr/1.e4  # yrs to yr/10k?
     disk_bh_torque_condition_normalized = disk_bh_torque_condition/0.1  # what does this do?
@@ -171,6 +173,9 @@ def change_bin_spin_angles(bin_spin_angle_1, bin_spin_angle_2, binary_flag_mergi
 
     bin_spin_angle_1[idx_non_mergers] = spin_angle_1_after
     bin_spin_angle_2[idx_non_mergers] = spin_angle_2_after
+    
+    bin_spin_angle_1[bin_spin_angle_1 < spin_minimum_resolution] = 0.0
+    bin_spin_angle_2[bin_spin_angle_2 < spin_minimum_resolution] = 0.0
 
     return (bin_spin_angle_1, bin_spin_angle_2)
 
@@ -325,9 +330,11 @@ def bin_contact_check(bin_mass_1, bin_mass_2, bin_sep, bin_flag_merging, smbh_ma
     """
 
     # We assume bh are not spinning when in contact. TODO: Consider spin in future.
-    contact_condition = (point_masses.r_schwarzschild_of_m(bin_mass_1) +
-                         point_masses.r_schwarzschild_of_m(bin_mass_2))
-    contact_condition = point_masses.r_g_from_units(smbh_mass, contact_condition).value
+    # contact_condition = (point_masses.r_schwarzschild_of_m_optimized(bin_mass_1) +
+    #                      point_masses.r_schwarzschild_of_m_optimized(bin_mass_2))
+    contact_condition = point_masses.r_schwarzschild_of_m_optimized(bin_mass_1 + bin_mass_2)
+    # contact_condition = point_masses.r_g_from_units(smbh_mass, contact_condition).value
+    contact_condition = point_masses.r_g_from_units_optimized(smbh_mass, contact_condition).value
     mask_condition = (bin_sep <= contact_condition)
 
     # If binary separation <= contact condition, set binary separation to contact condition
@@ -373,8 +380,22 @@ def bin_reality_check(bin_mass_1, bin_mass_2, bin_orb_a_1, bin_orb_a_2, bin_ecc,
         return (bh_bin_id_num_fakes)
 
 
+def bin_harden_baruteau_optimized( bin_mass_1, bin_mass_2, bin_sep, bin_ecc, bin_time_to_merger_gw, bin_flag_merging, bin_time_merged, smbh_mass, timestep_duration_yr, time_gw_normalization, time_passed, r_g_in_meters):
+    return baruteau_helper(
+        bin_mass_1, 
+        bin_mass_2, 
+        bin_sep, 
+        bin_ecc, 
+        bin_time_to_merger_gw, 
+        bin_flag_merging, 
+        bin_time_merged, 
+        smbh_mass, 
+        timestep_duration_yr, 
+        time_passed
+    )
+
 def bin_harden_baruteau(bin_mass_1, bin_mass_2, bin_sep, bin_ecc, bin_time_to_merger_gw, bin_flag_merging, bin_time_merged, smbh_mass, timestep_duration_yr,
-                        time_gw_normalization, time_passed):
+                        time_gw_normalization, time_passed, r_g_in_meters):
     """Harden black hole binaries using Baruteau+11 prescription
 
     Use Baruteau+11 prescription to harden a pre-existing binary.
@@ -441,7 +462,8 @@ def bin_harden_baruteau(bin_mass_1, bin_mass_2, bin_sep, bin_ecc, bin_time_to_me
     time_to_merger_gw = (point_masses.time_of_orbital_shrinkage(
         bin_mass_1[idx_non_mergers] * u.Msun,
         bin_mass_2[idx_non_mergers] * u.Msun,
-        point_masses.si_from_r_g(smbh_mass, bin_sep_nomerge),
+        # point_masses.si_from_r_g(smbh_mass, bin_sep_nomerge, r_g_defined=r_g_in_meters),
+        point_masses.si_from_r_g_optimized(smbh_mass, bin_sep_nomerge),
         sep_final=sep_crit
     ) * ecc_factor).value
 
