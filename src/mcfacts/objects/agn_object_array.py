@@ -62,7 +62,7 @@ class AGNObjectArray(ABC):
         # Since its not raw byte, that number is a bit smaller, but it should not cause any space issues.
         self.unique_id = unique_id
 
-        self.galaxy_id = np.full(len(unique_id), int(1), dtype=np.int64) if len(galaxy_id) == 0 else galaxy_id
+        self.galaxy_id = np.full(len(unique_id), int(0), dtype=np.int64) if len(galaxy_id) == 0 else galaxy_id
 
         self.mass = mass # Mass is required, if this is missing the consistency check with throw an error.
         self.spin = np.full(len(unique_id), 0., dtype=np.float64) if len(spin) == 0 else spin
