@@ -909,3 +909,115 @@ class FilingCabinet:
 
     def __len__(self):
         return len(self.agn_objects) + len(self.everything_else)
+
+    @staticmethod
+    def from_dicts(
+            settings,
+            agn_object_dict: dict,
+            everything_else_dict: dict,
+        ):
+        """Instantiate a new FilingCabinet object from dictionaries
+
+        Parameters
+        ----------
+        settings : SettingsManager object
+            The settings where 'bh_array_name' and the like are stored
+        agn_object_dict : dict
+            A dictionary containing the data to be included
+        everything_else_dict : dict
+            A dictionary containing things to be added to the everything_else
+            attribute of the FilingCabinet object
+
+        Returns
+        -------
+        FilingCabinet object
+            A filled filing cabinet
+        """
+        from mcfacts.inputs.settings_manager import SettingsManager
+        # Check inputs
+        if not isinstance(settings, SettingsManager):
+            raise TypeError(
+                "Settings must be type SettingsManager "
+                f"(is type {type(settings)})"
+            )
+        # Initialize output
+        out = FilingCabinet()
+        ### Handle AGNObjectArrays ###
+        # Loop agn_object_dict
+        for item, arr in agn_object_dict.items():
+            # Case 0: EZ
+            if isinstance(arr, AGNObjectArray):
+                out.set_array(item, arr)
+            # Case 1: We have to be smart
+            elif isinstance(arr, dict):
+                # Initialize match
+                match = None
+                for _skey, _svalue in settings.settings_finals.items():
+                    if (item == _svalue) and ("_array_name" in _skey):
+                        match = _skey
+                        break
+                if match is None:
+                    if item == "blackholes_lvk":
+                        match = "bbh_gw_array_name"
+                    else:
+                        raise ValueError(
+                            f"Cannot identify AGNObjectArray type: {item}"
+                        )
+                ## Know a priori what kind of array each of these is ##
+                match_class = None
+                if match in [
+                    "bh_array_name",
+                    "bh_inner_disk_array_name",
+                    "bh_inner_gw_array_name",
+                    "bh_prograde_array_name",
+                    "bh_retrograde_array_name",
+                    "bh_ejected_array_name",
+                    "emri_array_name",
+                ]:
+                    match_class = AGNBlackHoleArray
+                elif match in [
+                    "bbh_array_name",
+                    "bbh_gw_array_name",
+                    "bbh_inter_array_name",
+                ]:
+                    match_class = AGNBinaryBlackHoleArray
+                elif match in [
+                    "bbh_merged_array_name",
+                ]:
+                    match_class = AGNMergedBlackHoleArray
+                elif match in [
+                    "star_array_name",
+                    "stars_prograde_array_name",
+                    "stars_retrograde_array_name",
+                    "stars_merged_array_name",
+                ]:
+                    match_class = AGNStarArray
+                # Placeholders
+                elif match in []:
+                    match_class = AGNBinaryStarArray
+                elif match in []:
+                    match_class = AGNMergedBinaryStarArray
+                elif match in []:
+                    match_class = AGNDisruptedStarArray
+                elif match in []:
+                    match_class = AGNImmortalStarArray
+                else:
+                    match_class = AGNObjectArray
+                # Common sense check
+                if match_class is None:
+                    raise RuntimeError(f"Faulty logic")
+                ## Instantiate object ##
+                obj = match_class(**arr)
+                out.set_array(item, obj)
+
+            else:
+                raise TypeError(
+                    f"agn_object_dict[item] has type {type(arr)}. "
+                    f"Should be AGNObjectArray or dict."
+                )
+
+        ### Handle everything else ###
+        for item, value in everything_else_dict.items():
+            out.set_value(item, value)
+
+        return out
