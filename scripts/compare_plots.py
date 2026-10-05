@@ -1928,6 +1928,60 @@ def main():
     nosur_gen2_vkick = nosur_all_kick[nosur_merger_g2_mask]
     nosur_genX_vkick = nosur_all_kick[nosur_merger_gX_mask]
     
+
+    # some random data
+    x = nosur_all_kick
+    y = nosur_spin
+
+    def scatter_hist(x, y, ax, ax_histx, ax_histy):
+        # no labels
+        # ax_histx.tick_params(axis="x", labelbottom=False)
+        # ax_histy.tick_params(axis="y", labelleft=False)
+
+        # the scatter plot:
+        ax.scatter(x, y)
+
+        # now determine nice limits by hand:
+        spin_bins = np.logspace(np.log10(nosur_mergers[:, 4].min()), np.log10(nosur_mergers[:, 4].max()), 50)
+        kick_bins = np.logspace(np.log10(nosur_mergers[:, 16].min()), np.log10(nosur_mergers[:, 16].max()), 50)
+
+        #bins = np.arange(-lim, lim + binwidth, binwidth)
+        nosur_spin_hist_data = [nosur_mergers[:, 4][nosur_merger_g1_mask], nosur_mergers[:, 4][nosur_merger_g2_mask], nosur_mergers[:, 4][nosur_merger_gX_mask]]
+        nosur_kick_hist_data = [nosur_mergers[:, 16][nosur_merger_g1_mask], nosur_mergers[:, 16][nosur_merger_g2_mask], nosur_mergers[:, 16][nosur_merger_gX_mask]]
+        
+        # setting grid lines to the plots
+        ax.grid(True, color='gray', ls='dashed', alpha=0.4)
+        ax_histx.grid(True, color='gray', ls='dashed', alpha=0.4)
+        ax_histy.grid(True, color='gray', ls='dashed', alpha=0.4)
+        
+        ax_histx.hist(nosur_kick_hist_data, bins=kick_bins, color=hist_color, alpha=0.9, rwidth=0.8, label=hist_label, stacked=False)
+        ax_histy.hist(nosur_spin_hist_data, bins=spin_bins, color=hist_color, alpha=0.9, rwidth=0.8, label=hist_label, stacked=True, orientation='horizontal')
+        
+        ax.set(
+            xlabel=r'$v_{kick}$ [km/s]',
+                    ylabel=r'$a_{final}$',
+                    xscale="log",
+                    axisbelow=True,
+                    xlim=([1.1e0,2e3]),
+                    ylim=(0.21, 1.01)
+                    #, title=r'$a_{final}^{nosur}$',
+        )
+        ax_histx.set(
+                    xscale='log',
+                    ylabel=r'n'
+                )
+                
+    fig, axs = plt.subplot_mosaic([['histx', '.'],
+                                   ['scatter', 'histy']],
+                                   figsize=(6, 6),
+                                   width_ratios=(4, 1), height_ratios=(1, 4),
+                                   layout='constrained')
+    scatter_hist(x, y, axs['scatter'], axs['histx'], axs['histy'])
+    plt.savefig(opts.plots_directory + "/vkick_test_fig.png", format='png')    
+    asdf
+    
+    
+    
     nosur_scatter.patch.set_linewidth(3)
     nosur_hist.patch.set_linewidth(3)
     
@@ -1980,9 +2034,54 @@ def main():
 
     nosur_hist.grid(True, color='gray', ls='dashed', alpha=0.4)
     nosur_hist_data = [nosur_mergers[:, 4][nosur_merger_g1_mask], nosur_mergers[:, 4][nosur_merger_g2_mask], nosur_mergers[:, 4][nosur_merger_gX_mask]]
-    nosur_hist.hist(nosur_hist_data, bins=spin_bins, align='left', color=hist_color, alpha=0.9, rwidth=0.8, label=hist_label, stacked=True, orientation='horizontal')
+    nosur_hist_entries, nosur_hist_bin_edges = nosur_hist.hist(nosur_hist_data, bins=spin_bins, align='left', color=hist_color, alpha=0.9, rwidth=0.8, label=hist_label, stacked=True, orientation='horizontal')
     nosur_hist_data_int = list(map(int, nosur_hist_data[0]*100))
     mode, spin_count_nosur = stats.mode(nosur_hist_data_int, axis=None, keepdims=False)
+    asdf
+
+    # get poisson deviated random numbers
+    # data = np.random.poisson(2, 1000)
+    # merger generations are seperated to fit each poisson
+    nosur_hist_data_gen1 = nosur_mergers[:, 4][nosur_merger_g1_mask]
+    nosur_hist_data_gen2 = nosur_mergers[:, 4][nosur_merger_g2_mask]
+    nosur_hist_data_genX = nosur_mergers[:, 4][nosur_merger_gX_mask]
+
+    # the bins should be of integer width, because poisson is an integer distribution
+    bins = np.arange(11) - 0.5
+    entries, bin_edges, patches = plt.hist(data, bins=bins, density=True, label='Data')
+    nosur_hist_bins_gen1 = np.logspace(np.log10(nosur_mergers[:, 4][nosur_merger_g1_mask].min()), np.log10(nosur_mergers[:, 4][nosur_merger_g1_mask].max()), 50)
+    nosur_hist_bins_gen2 = np.logspace(np.log10(nosur_mergers[:, 4][nosur_merger_g2_mask].min()), np.log10(nosur_mergers[:, 4][nosur_merger_g2_mask].max()), 50)
+    nosur_hist_bins_genX = np.logspace(np.log10(nosur_mergers[:, 4][nosur_merger_gX_mask].min()), np.log10(nosur_mergers[:, 4][nosur_merger_gX_mask].max()), 50)
+
+    nosur_hist.grid(True, color='gray', ls='dashed', alpha=0.4)
+    nosur_hist_data = [nosur_mergers[:, 4][nosur_merger_g1_mask], nosur_mergers[:, 4][nosur_merger_g2_mask], nosur_mergers[:, 4][nosur_merger_gX_mask]]
+    nosur_hist_entries, nosur_hist_bin_edges = nosur_hist.hist(nosur_hist_data, bins=spin_bins, align='left', color=hist_color, alpha=0.9, rwidth=0.8, label=hist_label, stacked=True, orientation='horizontal')
+    nosur_hist_data_int = list(map(int, nosur_hist_data[0]*100))
+    mode, spin_count_nosur = stats.mode(nosur_hist_data_int, axis=None, keepdims=False)
+    
+    # calculate bin centers
+    bin_centers = 0.5 * (bin_edges[1:] + bin_edges[:-1])
+
+
+    def fit_function(k, lamb):
+        '''poisson function, parameter lamb is the fit parameter'''
+        return poisson.pmf(k, lamb)
+
+
+    # fit with curve_fit
+    parameters, cov_matrix = curve_fit(fit_function, bin_centers, entries)
+
+    # plot poisson-deviation with fitted parameter
+    x_plot = np.arange(0, 15)
+
+    plt.plot(
+        x_plot,
+        fit_function(x_plot, *parameters),
+        marker='o', linestyle='',
+        label='Fit result',
+    )
+    plt.legend()
+    plt.show()
     
     nosur_hist.yaxis.tick_right()
     nosur_hist.set(
