@@ -1094,7 +1094,7 @@ def merge_blackholes_precession(
         chi_1,
         chi_2,
     )
-    bh_thetaL = precession.remnantspindirection(
+    bh_thetaL = precession.reminantspindirection(
         theta1,
         theta2,
         deltaphi,
@@ -1229,13 +1229,13 @@ def merge_blackholes(blackholes_binary, blackholes_pro, blackholes_merged, bh_bi
         from mcfacts.external.sxs import evolve_binary
         from mcfacts.external.sxs import fit_modeler
         #bh_v_kick = 200 #evolve_binary.velocity()
-        surrogate = fit_modeler.GPRFitters.read_from_file(f"../src/mcfacts/inputs/data/surrogate.joblib")
+        surrogate = fit_modeler.GPRFitters.read_from_file(f"./src/mcfacts/inputs/data/surrogate.joblib")
         bh_mass_merged, bh_kick_comp_merged, bh_spin_merged, bh_spin_angle_merged, bh_v_kick, bh_mass_1_20Hz, bh_mass_2_20Hz, bh_spin_1_20Hz, bh_spin_2_20Hz = evolve_binary.surrogate(
-            blackholes_binary.at_id_num(bh_binary_id_num_merger, "mass_1"),
+            blackholes_binary.at_id_num(bh_binary_id_num_merger, "mass"),
             blackholes_binary.at_id_num(bh_binary_id_num_merger, "mass_2"),
-            blackholes_binary.at_id_num(bh_binary_id_num_merger, "spin_1"),
+            blackholes_binary.at_id_num(bh_binary_id_num_merger, "spin"),
             blackholes_binary.at_id_num(bh_binary_id_num_merger, "spin_2"),
-            blackholes_binary.at_id_num(bh_binary_id_num_merger, "spin_angle_1"),
+            blackholes_binary.at_id_num(bh_binary_id_num_merger, "spin_angle"),
             blackholes_binary.at_id_num(bh_binary_id_num_merger, "spin_angle_2"),
             len(blackholes_binary.at_id_num(bh_binary_id_num_merger, "spin_angle_2")), # phi_1 - randomly set in the function file
             len(blackholes_binary.at_id_num(bh_binary_id_num_merger, "spin_angle_2")), # phi_2 - randomly set in the function file
@@ -1351,6 +1351,9 @@ class ProcessBinaryBlackHoleMergers(TimelineActor):
 
         bh_binary_id_num_merger = blackholes_binary.id_num[blackholes_binary.flag_merging < 0]
 
+        if len(bh_binary_id_num_merger) == 0:
+            return
+
         self.log("Merger ID Numbers")
         self.log(bh_binary_id_num_merger)
 
@@ -1421,9 +1424,9 @@ class ProcessBinaryBlackHoleMergers(TimelineActor):
             from mcfacts.external.sxs import fit_modeler, evolve_binary
 
             # TODO: Take in surrogate.joblib file from user definied option
-            surrogate = fit_modeler.GPRFitters.read_from_file(f"../src/mcfacts/inputs/data/surrogate.joblib")
+            surrogate = fit_modeler.GPRFitters.read_from_file(f"./src/mcfacts/inputs/data/surrogate.joblib")
 
-            (bh_mass_merged, bh_spin_merged, bh_spin_angle_merged, bh_v_kick,
+            (bh_mass_merged, _, bh_spin_merged, bh_spin_angle_merged, bh_v_kick,
              bh_mass_1_20_hz, bh_mass_2_20_hz, bh_spin_1_20_hz, bh_spin_2_20_hz) = (
                 evolve_binary.surrogate(
                     blackholes_binary.at_id_num(bh_binary_id_num_merger, "mass"),
