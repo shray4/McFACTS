@@ -1094,7 +1094,7 @@ def merge_blackholes_precession(
         chi_1,
         chi_2,
     )
-    bh_thetaL = precession.reminantspindirection(
+    bh_thetaL = precession.remnantspindirection(
         theta1,
         theta2,
         deltaphi,
@@ -1260,6 +1260,8 @@ def merge_blackholes(blackholes_binary, blackholes_pro, blackholes_merged, bh_bi
             blackholes_binary.at_id_num(bh_binary_id_num_merger, "bin_sep"),
             blackholes_binary.at_id_num(bh_binary_id_num_merger, "bin_ecc"),
             smbh_mass,
+            r_g_in_meters=sm.r_g_in_meters,
+            random=rng
         )
     else:
         raise ValueError(f"Invalid option: flag_use_surrogate = {flag_use_surrogate}")

@@ -1736,7 +1736,9 @@ def main():
                                                                                    disk_density,
                                                                                    disk_sound_speed,
                                                                                    time_passed,
-                                                                                   galaxy)
+                                                                                   galaxy,
+                                                                                   r_g_in_meters = opts.r_g_in_meters,
+                                                                                   random=rng)
 
                         # Update filing cabinet
                         filing_cabinet.update(id_num=bh_binary_id_num_merger,
@@ -1822,7 +1824,10 @@ def main():
                                                                                    disk_density,
                                                                                    disk_sound_speed,
                                                                                    time_passed,
-                                                                                   galaxy)
+                                                                                   galaxy,
+                                                                                   r_g_in_meters = opts.r_g_in_meters,
+                                                                                   random=rng
+                                                                                   )
 
                         # Update filing cabinet
                         filing_cabinet.update(id_num=bh_binary_id_num_merger,
@@ -2052,7 +2057,9 @@ def main():
                                                                                    disk_density,
                                                                                    disk_sound_speed,
                                                                                    time_passed,
-                                                                                   galaxy)
+                                                                                   galaxy,
+                                                                                   r_g_in_meters = opts.r_g_in_meters,
+                                                                                   random=rng)
 
                         # Update filing cabinet
                         filing_cabinet.update(id_num=bh_binary_id_num_merger,
@@ -2267,7 +2274,9 @@ def main():
                                                                                    disk_density,
                                                                                    disk_sound_speed,
                                                                                    time_passed,
-                                                                                   galaxy)
+                                                                                   galaxy,
+                                                                                   r_g_in_meters = opts.r_g_in_meters,
+                                                                                   random=rng)
 
                         # Update filing cabinet
                         filing_cabinet.update(id_num=bh_binary_id_num_merger,
@@ -2605,7 +2614,9 @@ def main():
                                                                                disk_density,
                                                                                disk_sound_speed,
                                                                                time_passed,
-                                                                               galaxy)
+                                                                               galaxy,
+                                                                                r_g_in_meters = opts.r_g_in_meters,
+                                                                                random=rng)
 
                     # Update filing cabinet
                     filing_cabinet.update(id_num=bh_binary_id_num_merger,
