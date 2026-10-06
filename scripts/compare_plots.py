@@ -1922,12 +1922,7 @@ def main():
     # Spin vs Kick Velocity
     # ========================================
 
-    plot = plt.figure(figsize=(12, 4), constrained_layout=False)
-
     # ======= NO SURROGATE =========
-    nosur = plot.add_gridspec(nrows=1, ncols=4, left=0.05, right=0.2625, wspace=0)
-    nosur_scatter = plot.add_subplot(nosur[0, :-1])
-    nosur_hist = plot.add_subplot(nosur[0, 3], sharey=nosur_scatter)
 
     nosur_spin = nosur_mergers[:, 4]
     nosur_gen1_spin = nosur_spin[nosur_merger_g1_mask]
@@ -1939,17 +1934,53 @@ def main():
     nosur_gen2_vkick = nosur_all_kick[nosur_merger_g2_mask]
     nosur_genX_vkick = nosur_all_kick[nosur_merger_gX_mask]
 
-    # some random data
-    x = nosur_all_kick
-    y = nosur_spin
+    # color for presentations
+    # nosur_scatter.patch.set_edgecolor('#D81B60')
+    # nosur_hist.patch.set_edgecolor('#D81B60')
 
-    def scatter_hist(x, y, ax, ax_histx, ax_histy):
+    def scatter_hist(ax, ax_histx, ax_histy, title):
         # no labels
         # ax_histx.tick_params(axis="x", labelbottom=False)
         # ax_histy.tick_params(axis="y", labelleft=False)
+        axs['histx'].sharex(axs['scatter'])
+        axs['histy'].sharey(axs['scatter']) 
+        
+        title.axis("off")  # hide ticks/frame
+        title.text(0.4, 0.4, 'McFACTS\nnosur',
+           family='monospace', fontsize=12,
+           ha='center', va='center', ma='center',
+           transform=title.transAxes)
 
         # the scatter plot:
-        ax.scatter(x, y)
+        # plot the 1g-1g mergers
+        ax.scatter(nosur_gen1_vkick, nosur_gen1_spin,
+                            s=styles.markersize_gen1,
+                            marker=styles.marker_gen1,
+                            edgecolor=styles.color_gen1,
+                            facecolor='none',
+                            alpha=styles.markeralpha_gen1,
+                            label='1g-1g'
+                            )
+    
+        # plot the 2g+ mergers
+        ax.scatter(nosur_gen2_vkick, nosur_gen2_spin,
+                            s=styles.markersize_gen2,
+                            marker=styles.marker_gen2,
+                            edgecolor=styles.color_gen2,
+                            facecolor='none',
+                            alpha=styles.markeralpha_gen2,
+                            label='2g-1g or 2g-2g'
+                            )
+    
+        # plot the 3g+ mergers
+        ax.scatter(nosur_genX_vkick, nosur_genX_spin,
+                            s=styles.markersize_genX,
+                            marker=styles.marker_genX,
+                            edgecolor=styles.color_genX,
+                            facecolor='none',
+                            alpha=styles.markeralpha_genX,
+                            label=r'$\geq$3g-Ng'
+                            )
 
         # now determine nice limits by hand:
         spin_bins = np.logspace(np.log10(nosur_mergers[:, 4].min()), np.log10(nosur_mergers[:, 4].max()), 50)
@@ -1969,155 +2000,40 @@ def main():
         ax_histx.hist(nosur_kick_hist_data, bins=kick_bins, color=hist_color, alpha=0.9, rwidth=0.8, label=hist_label,
                       stacked=False)
         ax_histy.hist(nosur_spin_hist_data, bins=spin_bins, color=hist_color, alpha=0.9, rwidth=0.8, label=hist_label,
-                      stacked=True, orientation='horizontal')
+                      stacked=False, orientation='horizontal')
 
         ax.set(
-            xlabel=r'$v_{kick}$ [km/s]',
-            ylabel=r'$a_{final}$',
+            xlabel=r'$v_{\rm{kick}}$ [km/s]',
+            ylabel=r'$a_{\rm{final}}$',
             xscale="log",
             axisbelow=True,
             xlim=([1.1e0, 2e3]),
             ylim=(0.21, 1.01)
             # , title=r'$a_{final}^{nosur}$',
         )
+        
+        ax_histy.set(xlabel=r'n')
         ax_histx.set(
             xscale='log',
             ylabel=r'n'
         )
+        
+        if figsize == 'apj_col':
+                ax.legend(fontsize=10, loc='lower left')
+        elif figsize == 'apj_page':
+                ax.legend()
 
-    fig, axs = plt.subplot_mosaic([['histx', '.'],
+    fig, axs = plt.subplot_mosaic([['histx', 'title'],
                                    ['scatter', 'histy']],
                                   figsize=(6, 6),
                                   width_ratios=(4, 1), height_ratios=(1, 4),
                                   layout='constrained')
-    scatter_hist(x, y, axs['scatter'], axs['histx'], axs['histy'])
+    scatter_hist(axs['scatter'], axs['histx'], axs['histy'], axs['title'])
     plt.savefig(opts.plots_directory + "/vkick_test_fig.png", format='png')
-
-    nosur_scatter.patch.set_linewidth(3)
-    nosur_hist.patch.set_linewidth(3)
-
-    # color for presentations
-    # nosur_scatter.patch.set_edgecolor('#D81B60')
-    # nosur_hist.patch.set_edgecolor('#D81B60')
-
-    # plot the 1g-1g mergers
-    nosur_scatter.scatter(nosur_gen1_vkick, nosur_gen1_spin,
-                          s=styles.markersize_gen1,
-                          marker=styles.marker_gen1,
-                          edgecolor=styles.color_gen1,
-                          facecolor='none',
-                          alpha=styles.markeralpha_gen1,
-                          label='1g-1g'
-                          )
-
-    # plot the 2g+ mergers
-    nosur_scatter.scatter(nosur_gen2_vkick, nosur_gen2_spin,
-                          s=styles.markersize_gen2,
-                          marker=styles.marker_gen2,
-                          edgecolor=styles.color_gen2,
-                          facecolor='none',
-                          alpha=styles.markeralpha_gen2,
-                          label='2g-1g or 2g-2g'
-                          )
-
-    # plot the 3g+ mergers
-    nosur_scatter.scatter(nosur_genX_vkick, nosur_genX_spin,
-                          s=styles.markersize_genX,
-                          marker=styles.marker_genX,
-                          edgecolor=styles.color_genX,
-                          facecolor='none',
-                          alpha=styles.markeralpha_genX,
-                          label=r'$\geq$3g-Ng'
-                          )
-
-    nosur_scatter.grid(True, color='gray', ls='dashed', alpha=0.4)
-    nosur_scatter.set(
-        xlabel=r'$v_{kick}$ [km/s]',
-        ylabel=r'$a_{final}$',
-        title=r'$a_{final}^{nosur}$',
-        xscale="log",
-        axisbelow=True,
-        xlim=([1.1e0, 2e3]),
-        ylim=(0.21, 1.01)
-    )
-
-    spin_bins = np.logspace(np.log10(sur_mergers[:, 4].min()), np.log10(sur_mergers[:, 4].max()), 50)
-
-    nosur_hist.grid(True, color='gray', ls='dashed', alpha=0.4)
-    nosur_hist_data = [nosur_mergers[:, 4][nosur_merger_g1_mask], nosur_mergers[:, 4][nosur_merger_g2_mask],
-                       nosur_mergers[:, 4][nosur_merger_gX_mask]]
-    nosur_hist_entries, nosur_hist_bin_edges, _ = nosur_hist.hist(nosur_hist_data, bins=spin_bins, align='left',
-                                                               color=hist_color, alpha=0.9, rwidth=0.8,
-                                                               label=hist_label, stacked=True, orientation='horizontal')
-    nosur_hist_data_int = list(map(int, nosur_hist_data[0] * 100))
-    mode, spin_count_nosur = stats.mode(nosur_hist_data_int, axis=None, keepdims=False)
-
-    # get poisson deviated random numbers
-    # data = np.random.poisson(2, 1000)
-    # merger generations are seperated to fit each poisson
-    nosur_hist_data_gen1 = nosur_mergers[:, 4][nosur_merger_g1_mask]
-    nosur_hist_data_gen2 = nosur_mergers[:, 4][nosur_merger_g2_mask]
-    nosur_hist_data_genX = nosur_mergers[:, 4][nosur_merger_gX_mask]
-
-    # the bins should be of integer width, because poisson is an integer distribution
-    # bins = np.arange(11) - 0.5
-    # entries, bin_edges, patches = plt.hist(data, bins=bins, density=True, label='Data')
-    # nosur_hist_bins_gen1 = np.logspace(np.log10(nosur_mergers[:, 4][nosur_merger_g1_mask].min()),
-    #                                    np.log10(nosur_mergers[:, 4][nosur_merger_g1_mask].max()), 50)
-    # nosur_hist_bins_gen2 = np.logspace(np.log10(nosur_mergers[:, 4][nosur_merger_g2_mask].min()),
-    #                                    np.log10(nosur_mergers[:, 4][nosur_merger_g2_mask].max()), 50)
-    # nosur_hist_bins_genX = np.logspace(np.log10(nosur_mergers[:, 4][nosur_merger_gX_mask].min()),
-    #                                    np.log10(nosur_mergers[:, 4][nosur_merger_gX_mask].max()), 50)
-    #
-    # nosur_hist.grid(True, color='gray', ls='dashed', alpha=0.4)
-    # nosur_hist_data = [nosur_mergers[:, 4][nosur_merger_g1_mask], nosur_mergers[:, 4][nosur_merger_g2_mask],
-    #                    nosur_mergers[:, 4][nosur_merger_gX_mask]]
-    # nosur_hist_entries, nosur_hist_bin_edges, _ = nosur_hist.hist(nosur_hist_data, bins=spin_bins, align='left',
-    #                                                            color=hist_color, alpha=0.9, rwidth=0.8,
-    #                                                            label=hist_label, stacked=True, orientation='horizontal')
-    # nosur_hist_data_int = list(map(int, nosur_hist_data[0] * 100))
-    # mode, spin_count_nosur = stats.mode(nosur_hist_data_int, axis=None, keepdims=False)
-    #
-    # # calculate bin centers
-    # bin_centers = 0.5 * (bin_edges[1:] + bin_edges[:-1])
-    #
-    # def fit_function(k, lamb):
-    #     '''poisson function, parameter lamb is the fit parameter'''
-    #     return poisson.pmf(k, lamb)
-    #
-    # # fit with curve_fit
-    # parameters, cov_matrix = curve_fit(fit_function, bin_centers, entries)
-    #
-    # # plot poisson-deviation with fitted parameter
-    # x_plot = np.arange(0, 15)
-    #
-    # plt.plot(
-    #     x_plot,
-    #     fit_function(x_plot, *parameters),
-    #     marker='o', linestyle='',
-    #     label='Fit result',
-    # )
-    # plt.legend()
-    # plt.show()
-
-    nosur_hist.yaxis.tick_right()
-    nosur_hist.set(
-        xlabel=r'n',
-        xlim=[0, int(spin_count_nosur * 1.80)],
-        # xticks=[300, 1000],
-        xticks=np.linspace(int(spin_count_nosur * 0.50), int(spin_count_nosur * 1.30), 2)
-    )
-    plt.setp(nosur_hist.get_yticklabels(), visible=False)
-
-    if figsize == 'apj_col':
-        nosur_scatter.legend(fontsize=5, loc='lower left')
-    elif figsize == 'apj_page':
-        nosur_scatter.legend()
+    # nosur_scatter.patch.set_linewidth(3)
+    # nosur_hist.patch.set_linewidth(3)
 
     # ======= NO SURROGATE W/FILTER =========
-    nosur_filter = plot.add_gridspec(nrows=1, ncols=4, left=0.275, right=0.4875, wspace=0)
-    nosur_filter_scatter = plot.add_subplot(nosur_filter[0, :-1])
-    nosur_filter_hist = plot.add_subplot(nosur_filter[0, 3], sharey=nosur_filter_scatter)
 
     nosur_filter_spin = nosur_filter_mergers[:, 4]
     nosur_filter_gen1_spin = nosur_filter_spin[nosur_filter_merger_g1_mask]
@@ -2129,77 +2045,106 @@ def main():
     nosur_filter_gen2_vkick = nosur_filter_all_kick[nosur_filter_merger_g2_mask]
     nosur_filter_genX_vkick = nosur_filter_all_kick[nosur_filter_merger_gX_mask]
 
-    nosur_filter_scatter.patch.set_linewidth(3)
-    nosur_filter_hist.patch.set_linewidth(3)
-
     # color for presentations
-    # nosur_filter_scatter.patch.set_edgecolor('#1E88E5')
-    # nosur_filter_hist.patch.set_edgecolor('#1E88E5')
+    # nosur_scatter.patch.set_edgecolor('#D81B60')
+    # nosur_hist.patch.set_edgecolor('#D81B60')
 
-    # plot the 1g-1g mergers
-    nosur_filter_scatter.scatter(nosur_filter_gen1_vkick, nosur_filter_gen1_spin,
-                                 s=styles.markersize_gen1,
-                                 marker=styles.marker_gen1,
-                                 edgecolor=styles.color_gen1,
-                                 facecolor='none',
-                                 alpha=styles.markeralpha_gen1,
-                                 label='1g-1g'
-                                 )
+    def scatter_hist(ax, ax_histx, ax_histy, title):
+        # no labels
+        # ax_histx.tick_params(axis="x", labelbottom=False)
+        # ax_histy.tick_params(axis="y", labelleft=False)
+        axs['histx'].sharex(axs['scatter'])
+        axs['histy'].sharey(axs['scatter']) 
+        
+        title.axis("off")  # hide ticks/frame
+        title.text(0.4, 0.4, 'McFACTS\nnosur\nfilter',
+            family='monospace', fontsize=12,
+            ha='center', va='center', ma='center',
+            transform=title.transAxes)
 
-    # plot the 2g+ mergers
-    nosur_filter_scatter.scatter(nosur_filter_gen2_vkick, nosur_filter_gen2_spin,
-                                 s=styles.markersize_gen2,
-                                 marker=styles.marker_gen2,
-                                 edgecolor=styles.color_gen2,
-                                 facecolor='none',
-                                 alpha=styles.markeralpha_gen2,
-                                 label='2g-1g or 2g-2g'
-                                 )
+        # the scatter plot:
+        # plot the 1g-1g mergers
+        ax.scatter(nosur_filter_gen1_vkick, nosur_filter_gen1_spin,
+                            s=styles.markersize_gen1,
+                            marker=styles.marker_gen1,
+                            edgecolor=styles.color_gen1,
+                            facecolor='none',
+                            alpha=styles.markeralpha_gen1,
+                            label='1g-1g'
+                            )
+    
+        # plot the 2g+ mergers
+        ax.scatter(nosur_filter_gen2_vkick, nosur_filter_gen2_spin,
+                            s=styles.markersize_gen2,
+                            marker=styles.marker_gen2,
+                            edgecolor=styles.color_gen2,
+                            facecolor='none',
+                            alpha=styles.markeralpha_gen2,
+                            label='2g-1g or 2g-2g'
+                            )
+    
+        # plot the 3g+ mergers
+        ax.scatter(nosur_filter_genX_vkick, nosur_filter_genX_spin,
+                            s=styles.markersize_genX,
+                            marker=styles.marker_genX,
+                            edgecolor=styles.color_genX,
+                            facecolor='none',
+                            alpha=styles.markeralpha_genX,
+                            label=r'$\geq$3g-Ng'
+                            )
 
-    # plot the 3g+ mergers
-    nosur_filter_scatter.scatter(nosur_filter_genX_vkick, nosur_filter_genX_spin,
-                                 s=styles.markersize_genX,
-                                 marker=styles.marker_genX,
-                                 edgecolor=styles.color_genX,
-                                 facecolor='none',
-                                 alpha=styles.markeralpha_genX,
-                                 label=r'$\geq$3g-Ng'
-                                 )
+        # now determine nice limits by hand:
+        spin_bins = np.logspace(np.log10(nosur_filter_mergers[:, 4].min()), np.log10(nosur_filter_mergers[:, 4].max()), 50)
+        kick_bins = np.logspace(np.log10(nosur_filter_mergers[:, 16].min()), np.log10(nosur_filter_mergers[:, 16].max()), 50)
 
-    nosur_filter_scatter.grid(True, color='gray', ls='dashed', alpha=0.4)
-    nosur_filter_scatter.set(
-        xlabel=r'$v_{kick}$ [km/s]',
-        title=r'$a_{final}^{nosur\_filter}$',
-        xscale="log",
-        axisbelow=True,
-        xlim=([1.1e0, 2e3]),
-        ylim=(0.21, 1.01)
-    )
-    plt.setp(nosur_filter_scatter.get_yticklabels(), visible=False)
+        # bins = np.arange(-lim, lim + binwidth, binwidth)
+        nosur_filter_spin_hist_data = [nosur_filter_mergers[:, 4][nosur_filter_merger_g1_mask], nosur_filter_mergers[:, 4][nosur_filter_merger_g2_mask],
+                                nosur_filter_mergers[:, 4][nosur_filter_merger_gX_mask]]
+        nosur_filter_kick_hist_data = [nosur_filter_mergers[:, 16][nosur_filter_merger_g1_mask], nosur_filter_mergers[:, 16][nosur_filter_merger_g2_mask],
+                                nosur_filter_mergers[:, 16][nosur_filter_merger_gX_mask]]
 
-    spin_bins = np.logspace(np.log10(nosur_mergers[:, 4].min()), np.log10(nosur_mergers[:, 4].max()), 50)
+        # setting grid lines to the plots
+        ax.grid(True, color='gray', ls='dashed', alpha=0.4)
+        ax_histx.grid(True, color='gray', ls='dashed', alpha=0.4)
+        ax_histy.grid(True, color='gray', ls='dashed', alpha=0.4)
 
-    nosur_filter_hist.grid(True, color='gray', ls='dashed', alpha=0.4)
-    nosur_filter_hist_data = [nosur_filter_mergers[:, 4][nosur_filter_merger_g1_mask],
-                              nosur_filter_mergers[:, 4][nosur_filter_merger_g2_mask],
-                              nosur_filter_mergers[:, 4][nosur_filter_merger_gX_mask]]
-    nosur_filter_hist.hist(nosur_filter_hist_data, bins=spin_bins, align='left', color=hist_color, alpha=0.9,
-                           rwidth=0.8, label=hist_label, stacked=True, orientation='horizontal')
-    nosur_filter_hist_data_int = list(map(int, nosur_filter_hist_data[0] * 100))
-    mode, spin_count_nosur_filter = stats.mode(nosur_filter_hist_data_int, axis=None, keepdims=False)
+        ax_histx.hist(nosur_filter_kick_hist_data, bins=kick_bins, color=hist_color, alpha=0.9, rwidth=0.8, label=hist_label,
+                        stacked=False)
+        ax_histy.hist(nosur_filter_spin_hist_data, bins=spin_bins, color=hist_color, alpha=0.9, rwidth=0.8, label=hist_label,
+                        stacked=False, orientation='horizontal')
 
-    nosur_filter_hist.set(
-        xlabel=r'n',
-        xlim=[0, int(spin_count_nosur_filter * 1.80)],
-        # xticks=[300, 1000],
-        xticks=np.linspace(int(spin_count_nosur * 0.50), int(spin_count_nosur * 1.30), 2)
-    )
-    plt.setp(nosur_filter_hist.get_yticklabels(), visible=False)
+        ax.set(
+            xlabel=r'$v_{\rm{kick}}$ [km/s]',
+            ylabel=r'$a_{\rm{final}}$',
+            xscale="log",
+            axisbelow=True,
+            xlim=([1.1e0, 2e3]),
+            ylim=(0.21, 1.01)
+            # , title=r'$a_{final}^{nosur}$',
+        )
+        
+        ax_histy.set(xlabel=r'n')
+        ax_histx.set(
+            xscale='log',
+            ylabel=r'n'
+        )
+        
+        if figsize == 'apj_col':
+                ax.legend(fontsize=10, loc='lower left')
+        elif figsize == 'apj_page':
+                ax.legend()
 
+    fig, axs = plt.subplot_mosaic([['histx', 'title'],
+                                    ['scatter', 'histy']],
+                                    figsize=(6, 6),
+                                    width_ratios=(4, 1), height_ratios=(1, 4),
+                                    layout='constrained')
+    scatter_hist(axs['scatter'], axs['histx'], axs['histy'], axs['title'])
+    plt.savefig(opts.plots_directory + "/vkick_test2_fig.png", format='png')
+    # nosur_scatter.patch.set_linewidth(3)
+    # nosur_hist.patch.set_linewidth(3)
+    
     # ======= PRECESSION =========
-    prec = plot.add_gridspec(nrows=1, ncols=4, left=0.5, right=0.7125, wspace=0)
-    prec_scatter = plot.add_subplot(prec[0, :-1])
-    prec_hist = plot.add_subplot(prec[0, 3], sharey=prec_scatter)
 
     prec_spin = prec_mergers[:, 4]
     prec_gen1_spin = prec_spin[prec_merger_g1_mask]
@@ -2211,83 +2156,107 @@ def main():
     prec_gen2_vkick = prec_all_kick[prec_merger_g2_mask]
     prec_genX_vkick = prec_all_kick[prec_merger_gX_mask]
 
-    prec_scatter.patch.set_linewidth(3)
-    prec_hist.patch.set_linewidth(3)
-
     # color for presentations
-    # prec_scatter.patch.set_edgecolor('#E4AC04')
-    # prec_hist.patch.set_edgecolor("#E4AC04")
+    # nosur_scatter.patch.set_edgecolor('#D81B60')
+    # nosur_hist.patch.set_edgecolor('#D81B60')
 
-    prec_scatter.scatter(prec_gen1_vkick, prec_gen1_spin,
-                         s=styles.markersize_gen1,
-                         marker=styles.marker_gen1,
-                         edgecolor=styles.color_gen1,
-                         facecolor='none',
-                         alpha=styles.markeralpha_gen1,
-                         label='1g-1g'
-                         )
+    def scatter_hist(ax, ax_histx, ax_histy, title):
+        # no labels
+        # ax_histx.tick_params(axis="x", labelbottom=False)
+        # ax_histy.tick_params(axis="y", labelleft=False)
+        axs['histx'].sharex(axs['scatter'])
+        axs['histy'].sharey(axs['scatter']) 
+        
+        title.axis("off")  # hide ticks/frame
+        title.text(0.4, 0.4, 'McFACTS\nprec',
+            family='monospace', fontsize=12,
+            ha='center', va='center', ma='center',
+            transform=title.transAxes)
 
-    # plot the 2g+ mergers
-    prec_scatter.scatter(prec_gen2_vkick, prec_gen2_spin,
-                         s=styles.markersize_gen2,
-                         marker=styles.marker_gen2,
-                         edgecolor=styles.color_gen2,
-                         facecolor='none',
-                         alpha=styles.markeralpha_gen2,
-                         label='2g-1g or 2g-2g'
-                         )
+        # the scatter plot:
+        # plot the 1g-1g mergers
+        ax.scatter(prec_gen1_vkick, prec_gen1_spin,
+                            s=styles.markersize_gen1,
+                            marker=styles.marker_gen1,
+                            edgecolor=styles.color_gen1,
+                            facecolor='none',
+                            alpha=styles.markeralpha_gen1,
+                            label='1g-1g'
+                            )
+    
+        # plot the 2g+ mergers
+        ax.scatter(prec_gen2_vkick, prec_gen2_spin,
+                            s=styles.markersize_gen2,
+                            marker=styles.marker_gen2,
+                            edgecolor=styles.color_gen2,
+                            facecolor='none',
+                            alpha=styles.markeralpha_gen2,
+                            label='2g-1g or 2g-2g'
+                            )
+    
+        # plot the 3g+ mergers
+        ax.scatter(prec_genX_vkick, prec_genX_spin,
+                            s=styles.markersize_genX,
+                            marker=styles.marker_genX,
+                            edgecolor=styles.color_genX,
+                            facecolor='none',
+                            alpha=styles.markeralpha_genX,
+                            label=r'$\geq$3g-Ng'
+                            )
 
-    # plot the 3g+ mergers
-    prec_scatter.scatter(prec_genX_vkick, prec_genX_spin,
-                         s=styles.markersize_genX,
-                         marker=styles.marker_genX,
-                         edgecolor=styles.color_genX,
-                         facecolor='none',
-                         alpha=styles.markeralpha_genX,
-                         label=r'$\geq$3g-Ng'
-                         )
+        # now determine nice limits by hand:
+        spin_bins = np.logspace(np.log10(prec_mergers[:, 4].min()), np.log10(prec_mergers[:, 4].max()), 50)
+        kick_bins = np.logspace(np.log10(prec_mergers[:, 16].min()), np.log10(prec_mergers[:, 16].max()), 50)
 
-    prec_scatter.grid(True, color='gray', ls='dashed', alpha=0.4)
-    prec_scatter.set(
-        xlabel=r'$v_{kick}$ [km/s]',
-        title=r'$a_{final}^{prec}$',
-        xscale="log",
-        axisbelow=True,
-        xlim=([1.1e0, 2e3]),
-        ylim=(0.21, 1.01)
-    )
+        # bins = np.arange(-lim, lim + binwidth, binwidth)
+        prec_spin_hist_data = [prec_mergers[:, 4][prec_merger_g1_mask], prec_mergers[:, 4][prec_merger_g2_mask],
+                                prec_mergers[:, 4][prec_merger_gX_mask]]
+        prec_kick_hist_data = [prec_mergers[:, 16][prec_merger_g1_mask], prec_mergers[:, 16][prec_merger_g2_mask],
+                                prec_mergers[:, 16][prec_merger_gX_mask]]
 
-    spin_bins = np.logspace(np.log10(prec_mergers[:, 4].min()), np.log10(prec_mergers[:, 4].max()), 50)
+        # setting grid lines to the plots
+        ax.grid(True, color='gray', ls='dashed', alpha=0.4)
+        ax_histx.grid(True, color='gray', ls='dashed', alpha=0.4)
+        ax_histy.grid(True, color='gray', ls='dashed', alpha=0.4)
 
-    prec_hist.grid(True, color='gray', ls='dashed', alpha=0.4)
-    prec_hist_data = [prec_mergers[:, 4][prec_merger_g1_mask], prec_mergers[:, 4][prec_merger_g2_mask],
-                      prec_mergers[:, 4][prec_merger_gX_mask]]
-    prec_hist.hist(prec_hist_data, bins=spin_bins, align='left', color=hist_color, alpha=0.9, rwidth=0.8,
-                   label=hist_label, stacked=True, orientation='horizontal')
-    prec_hist.yaxis.tick_right()
-    prec_hist_data_int = list(map(int, prec_hist_data[0] * 100))
-    mode, spin_count_prec = stats.mode(prec_hist_data_int, axis=None, keepdims=False)
+        ax_histx.hist(prec_kick_hist_data, bins=kick_bins, color=hist_color, alpha=0.9, rwidth=0.8, label=hist_label,
+                        stacked=False)
+        ax_histy.hist(prec_spin_hist_data, bins=spin_bins, color=hist_color, alpha=0.9, rwidth=0.8, label=hist_label,
+                        stacked=False, orientation='horizontal')
 
-    prec_hist.set(
-        xlabel=r'n',
-        xlim=[0, int(spin_count_prec * 1.80)],
-        # xticks=[300, 1000],
-        xticks=np.linspace(int(spin_count_nosur * 0.50), int(spin_count_nosur * 1.30), 2)
-    )
-    plt.setp(prec_scatter.get_yticklabels(), visible=False)
-    plt.setp(prec_hist.get_yticklabels(), visible=False)
+        ax.set(
+            xlabel=r'$v_{\rm{kick}}$ [km/s]',
+            ylabel=r'$a_{\rm{final}}$',
+            xscale="log",
+            axisbelow=True,
+            xlim=([1.1e0, 2e3]),
+            ylim=(0.21, 1.01)
+            # , title=r'$a_{final}^{nosur}$',
+        )
+        
+        ax_histy.set(xlabel=r'n')
+        ax_histx.set(
+            xscale='log',
+            ylabel=r'n'
+        )
+        
+        if figsize == 'apj_col':
+                ax.legend(fontsize=10, loc='lower left')
+        elif figsize == 'apj_page':
+                ax.legend()
+
+    fig, axs = plt.subplot_mosaic([['histx', 'title'],
+                                    ['scatter', 'histy']],
+                                    figsize=(6, 6),
+                                    width_ratios=(4, 1), height_ratios=(1, 4),
+                                    layout='constrained')
+    scatter_hist(axs['scatter'], axs['histx'], axs['histy'], axs['title'])
+    plt.savefig(opts.plots_directory + "/vkick_test3_fig.png", format='png')
+    # nosur_scatter.patch.set_linewidth(3)
+    # nosur_hist.patch.set_linewidth(3)
+    
     # ======= SURROGATE =========
-    sur = plot.add_gridspec(nrows=1, ncols=4, left=0.725, right=0.95, wspace=0)
-    sur_scatter = plot.add_subplot(sur[0, :-1])
-    sur_hist = plot.add_subplot(sur[0, 3], sharey=sur_scatter)
-
-    sur_scatter.patch.set_linewidth(3)
-    sur_hist.patch.set_linewidth(3)
-
-    # color for presentations
-    # sur_scatter.patch.set_edgecolor("#006D5B")
-    # sur_hist.patch.set_edgecolor('#006D5B')
-
+    
     sur_spin = sur_mergers[:, 4]
     sur_gen1_spin = sur_spin[sur_merger_g1_mask]
     sur_gen2_spin = sur_spin[sur_merger_g2_mask]
@@ -2298,72 +2267,105 @@ def main():
     sur_gen2_vkick = sur_all_kick[sur_merger_g2_mask]
     sur_genX_vkick = sur_all_kick[sur_merger_gX_mask]
 
-    # plot the 1g-1g mergers
-    sur_scatter.scatter(sur_gen1_vkick, sur_gen1_spin,
-                        s=styles.markersize_gen1,
-                        marker=styles.marker_gen1,
-                        edgecolor=styles.color_gen1,
-                        facecolor='none',
-                        alpha=styles.markeralpha_gen1,
-                        label='1g-1g'
-                        )
+    # color for presentations
+    # nosur_scatter.patch.set_edgecolor('#D81B60')
+    # nosur_hist.patch.set_edgecolor('#D81B60')
 
-    # plot the 2g+ mergers
-    sur_scatter.scatter(sur_gen2_vkick, sur_gen2_spin,
-                        s=styles.markersize_gen2,
-                        marker=styles.marker_gen2,
-                        edgecolor=styles.color_gen2,
-                        facecolor='none',
-                        alpha=styles.markeralpha_gen2,
-                        label='2g-1g or 2g-2g'
-                        )
+    def scatter_hist(ax, ax_histx, ax_histy, title):
+        # no labels
+        # ax_histx.tick_params(axis="x", labelbottom=False)
+        # ax_histy.tick_params(axis="y", labelleft=False)
+        axs['histx'].sharex(axs['scatter'])
+        axs['histy'].sharey(axs['scatter']) 
+        
+        title.axis("off")  # hide ticks/frame
+        title.text(0.4, 0.4, 'McFACTS\nsur',
+            family='monospace', fontsize=12,
+            ha='center', va='center', ma='center',
+            transform=title.transAxes)
 
-    # plot the 3g+ mergers
-    sur_scatter.scatter(sur_genX_vkick, sur_genX_spin,
-                        s=styles.markersize_genX,
-                        marker=styles.marker_genX,
-                        edgecolor=styles.color_genX,
-                        facecolor='none',
-                        alpha=styles.markeralpha_genX,
-                        label=r'$\geq$3g-Ng'
-                        )
+        # the scatter plot:
+        # plot the 1g-1g mergers
+        ax.scatter(sur_gen1_vkick, sur_gen1_spin,
+                            s=styles.markersize_gen1,
+                            marker=styles.marker_gen1,
+                            edgecolor=styles.color_gen1,
+                            facecolor='none',
+                            alpha=styles.markeralpha_gen1,
+                            label='1g-1g'
+                            )
+    
+        # plot the 2g+ mergers
+        ax.scatter(sur_gen2_vkick, sur_gen2_spin,
+                            s=styles.markersize_gen2,
+                            marker=styles.marker_gen2,
+                            edgecolor=styles.color_gen2,
+                            facecolor='none',
+                            alpha=styles.markeralpha_gen2,
+                            label='2g-1g or 2g-2g'
+                            )
+    
+        # plot the 3g+ mergers
+        ax.scatter(sur_genX_vkick, sur_genX_spin,
+                            s=styles.markersize_genX,
+                            marker=styles.marker_genX,
+                            edgecolor=styles.color_genX,
+                            facecolor='none',
+                            alpha=styles.markeralpha_genX,
+                            label=r'$\geq$3g-Ng'
+                            )
 
-    sur_scatter.grid(True, color='gray', ls='dashed', alpha=0.4)
-    sur_scatter.set(
-        xlabel=r'$v_{\textrm{kick}}$ [km/s]',
-        title=r'$a_{final}^{sur}$',
-        xscale="log",
-        axisbelow=True,
-        xlim=([1.1e0, 2e3]),
-        ylim=(0.21, 1.01)
-    )
+        # now determine nice limits by hand:
+        spin_bins = np.logspace(np.log10(sur_mergers[:, 4].min()), np.log10(sur_mergers[:, 4].max()), 50)
+        kick_bins = np.logspace(np.log10(sur_mergers[:, 16].min()), np.log10(sur_mergers[:, 16].max()), 50)
 
-    spin_bins = np.logspace(np.log10(sur_mergers[:, 4].min()), np.log10(sur_mergers[:, 4].max()), 50)
+        # bins = np.arange(-lim, lim + binwidth, binwidth)
+        sur_spin_hist_data = [sur_mergers[:, 4][sur_merger_g1_mask], sur_mergers[:, 4][sur_merger_g2_mask],
+                                sur_mergers[:, 4][sur_merger_gX_mask]]
+        sur_kick_hist_data = [sur_mergers[:, 16][sur_merger_g1_mask], sur_mergers[:, 16][sur_merger_g2_mask],
+                                sur_mergers[:, 16][sur_merger_gX_mask]]
 
-    sur_hist.grid(True, color='gray', ls='dashed', alpha=0.4)
-    sur_hist_data = [sur_mergers[:, 4][sur_merger_g1_mask], sur_mergers[:, 4][sur_merger_g2_mask],
-                     sur_mergers[:, 4][sur_merger_gX_mask]]
-    sur_hist.hist(sur_hist_data, bins=spin_bins, align='left', color=hist_color, alpha=0.9, rwidth=0.8,
-                  label=hist_label, stacked=True, orientation='horizontal')
-    sur_hist.yaxis.tick_right()
-    sur_hist_data_int = list(map(int, sur_hist_data[0] * 100))
-    mode, spin_count_sur = stats.mode(sur_hist_data_int, axis=None, keepdims=False)
+        # setting grid lines to the plots
+        ax.grid(True, color='gray', ls='dashed', alpha=0.4)
+        ax_histx.grid(True, color='gray', ls='dashed', alpha=0.4)
+        ax_histy.grid(True, color='gray', ls='dashed', alpha=0.4)
 
-    sur_hist.set(
-        xlabel=r'n',
-        xlim=[0, int(spin_count_sur * 1.80)],
-        # xticks=[300, 1000],
-        xticks=np.linspace(int(spin_count_nosur * 0.50), int(spin_count_nosur * 1.30), 2)
-    )
+        ax_histx.hist(sur_kick_hist_data, bins=kick_bins, color=hist_color, alpha=0.9, rwidth=0.8, label=hist_label,
+                        stacked=False)
+        ax_histy.hist(sur_spin_hist_data, bins=spin_bins, color=hist_color, alpha=0.9, rwidth=0.8, label=hist_label,
+                        stacked=False, orientation='horizontal')
 
-    plt.setp(sur_scatter.get_yticklabels(), visible=False)
-    plt.setp(sur_hist.get_yticklabels(), visible=False)
+        ax.set(
+            xlabel=r'$v_{\rm{kick}}$ [km/s]',
+            ylabel=r'$a_{\rm{final}}$',
+            xscale="log",
+            axisbelow=True,
+            xlim=([1.1e0, 2e3]),
+            ylim=(0.21, 1.01)
+            # , title=r'$a_{final}^{nosur}$',
+        )
+        
+        ax_histy.set(xlabel=r'n')
+        ax_histx.set(
+            xscale='log',
+            ylabel=r'n'
+        )
+        
+        if figsize == 'apj_col':
+                ax.legend(fontsize=10, loc='lower left')
+        elif figsize == 'apj_page':
+                ax.legend()
 
-    plt.tight_layout()
-    # plt.show()
-    plt.savefig(opts.plots_directory + '/spin_vkick.png', format='png')
-    # plt.close()
-
+    fig, axs = plt.subplot_mosaic([['histx', 'title'],
+                                    ['scatter', 'histy']],
+                                    figsize=(6, 6),
+                                    width_ratios=(4, 1), height_ratios=(1, 4),
+                                    layout='constrained')
+    scatter_hist(axs['scatter'], axs['histx'], axs['histy'], axs['title'])
+    plt.savefig(opts.plots_directory + "/vkick_test4_fig.png", format='png')
+    # nosur_scatter.patch.set_linewidth(3)
+    # nosur_hist.patch.set_linewidth(3)
+    asdf
     # ========================================
     # Spin vs Kick Velocity (q < 1/8)
     # ========================================
